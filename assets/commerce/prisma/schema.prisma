@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+}
+
+model Admin {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+  name String @default("")
+  active Boolean @default(true)
+  roleId String?
+  role Role? @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now())
+  sessions     AdminSession[]
+}
+model AdminSession {
+  tokenHash String @id
+  adminId   String
+  expiresAt DateTime
+  admin     Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
+model LoginThrottle {
+  key       String @id
+  attempts  Int
+  resetAt   DateTime
+}
+model Category {
+  id       String @id @default(cuid())
+  name     String @unique
+  products Product[]
+}
+model Product {
+  id          String @id @default(cuid())
+  name        String
+  description String @default("")
+  image       String @default("")
+  active      Boolean @default(true)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  variants    Variant[]
+}
+model Variant {
+  id        String @id @default(cuid())
+  productId String
+  sku       String @unique
+  size      String
+  color     String
+  price     Int
+  stock     Int
+  active    Boolean @default(true)
+  product   Product @relation(fields: [productId], references: [id])
+  @@unique([productId, size, color])
+}
+model Order {
+  id             String @id @default(cuid())
+  idempotencyKey String @unique
+  requestHash    String
+  accessHash     String
+  customerName   String
+  email          String
+  address        String
+  currency       String
+  total          Int
+  status         String @default("PENDING")
+  createdAt      DateTime @default(now())
+  items          OrderItem[]
+  events         PaymentEvent[]
+}
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  variantId String
+  name      String
+  sku       String
+  size      String
+  color     String
+  quantity  Int
+  unitPrice Int
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+model PaymentEvent {
+  id      String @id
+  orderId String
+  outcome String
+  order   Order @relation(fields: [orderId], references: [id])
+}
+
+model Role {
+  id              String @id @default(cuid())
+  slug            String @unique
+  name            String
+  permissionsJson String
+  admins          Admin[]
+}
+model AuditLog {
+  id        String @id @default(cuid())
+  actorId   String?
+  actor     String
+  action    String
+  target    String @default("")
+  details   String @default("{}")
+  success   Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}
+model SystemSetting {
+  key   String @id
+  value String
+}

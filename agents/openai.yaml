@@ -1,0 +1,4 @@
+interface:
+  display_name: "Web Builder"
+  short_description: "Choose designs and let AI build a full-stack website"
+  default_prompt: "Use $web-builder to build a website for my business, help me choose the designs, and handle the implementation."

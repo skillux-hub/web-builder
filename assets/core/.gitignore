@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+LOCAL_ACCESS.md
+prisma/*.db*
+.web-builder/templates/
+*.tsbuildinfo
