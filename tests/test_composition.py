@@ -1,6 +1,8 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
+import stat
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -74,6 +76,30 @@ class CompositionTest(unittest.TestCase):
             with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "adminRequired"):
                 self.generate({**self.brief, **fields})
             self.assertFalse((self.root / "project").exists())
+
+    def test_generated_secrets_are_private_and_resolved_modules_are_recorded(self):
+        path, _ = self.generate({**self.brief, "websiteType": "business", "adminRequired": True, "modules": ["services"]})
+        config = json.loads((path / "site.config.json").read_text(encoding="utf-8"))
+        self.assertIn("content", config["modules"])
+        self.assertIn("admin", config["modules"])
+        if os.name != "posix":
+            return
+        for name in (".env", "LOCAL_ACCESS.md"):
+            self.assertEqual(stat.S_IMODE((path / name).stat().st_mode), 0o600, name)
+
+    def test_commerce_foundation_accepts_canonical_module_id(self):
+        brief = {**self.brief, "websiteType": "commerce", "adminRequired": False, "modules": ["commerce"], "currency": "GBP"}
+        path, state = self.generate(brief, "commerce")
+        self.assertIn("commerce", state["composition"]["modules"])
+        self.assertEqual(state["brief"]["modules"], ["commerce"])
+        self.assertIn("commerce", json.loads((path / "site.config.json").read_text(encoding="utf-8"))["modules"])
+
+    def test_failed_generation_leaves_no_partial_output(self):
+        with patch.object(creator, "build", side_effect=OSError("disk full")):
+            with self.assertRaises(OSError):
+                creator.create(self.root / "project", {**self.brief, "adminRequired": False})
+        self.assertFalse((self.root / "project").exists())
+        self.assertEqual(list(self.root.iterdir()), [])
 
     def test_invalid_admin_and_type_fields_fail_before_writing(self):
         for fields in [{"adminRequired": "false"}, {"singlePage": 1}, {"websiteType": []}, {"additionalWebsiteTypes": "booking"}]:

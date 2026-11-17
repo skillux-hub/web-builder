@@ -8,8 +8,9 @@ import tempfile
 import threading
 import types
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 import urllib.error
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("skillux_gates", ROOT / "scripts/skillux.py")
@@ -57,7 +58,7 @@ class SkilluxGatesTest(unittest.TestCase):
         with patch.object(client, "auth_status", side_effect=[{"authenticated": False}, {"authenticated": True}]) as status, patch.object(client.shutil, "which", return_value="npx.cmd"), patch.object(client.subprocess, "run", return_value=types.SimpleNamespace(returncode=0)) as run:
             self.assertTrue(client.ensure_login()["authenticated"])
         self.assertEqual(status.call_count, 2)
-        self.assertEqual(run.call_args.args[0], ["npx.cmd", "--yes", "skillux", "login"])
+        self.assertEqual(run.call_args.args[0], ["npx.cmd", "--yes", client.SKILLUX_CLI, "login"])
 
     def test_cancelled_login_or_unverified_cli_success_cannot_continue(self):
         for returncode in [1, 0]:
@@ -114,6 +115,57 @@ class SkilluxGatesTest(unittest.TestCase):
             self.assertTrue(client.wait_for_access("example")["ok"])
         login.assert_called_once()
         browser.assert_not_called()
+
+    def test_download_streams_to_disk_and_caps_size(self):
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.headers = {"content-type": "application/zip", "x-skillux-version": "2.1.0"}
+        response.read.side_effect = [b"chunk-one", b"chunk-two", b""]
+        with tempfile.TemporaryDirectory() as temp, patch.object(client, "open_response", return_value=response):
+            target = Path(temp) / "pack.zip"
+            self.assertEqual(client.download("https://skillux.dev/api/me/skills/example/download", "private-token", target), ("application/zip", "2.1.0"))
+            self.assertEqual(target.read_bytes(), b"chunk-onechunk-two")
+        oversized = MagicMock()
+        oversized.__enter__.return_value = oversized
+        oversized.headers = {}
+        oversized.read.side_effect = [b"x" * (client.MAX_TOTAL + 1)]
+        with tempfile.TemporaryDirectory() as temp, patch.object(client, "open_response", return_value=oversized):
+            with self.assertRaisesRegex(client.SkilluxError, "100 MB"):
+                client.download("https://skillux.dev/api/me/skills/example/download", "private-token", Path(temp) / "pack.zip")
+
+    def test_download_urls_are_limited_to_the_service_origin(self):
+        base = "https://skillux.dev/api"
+        self.assertTrue(client.trusted_download("https://skillux.dev/skills/example.zip", base))
+        self.assertTrue(client.trusted_download("https://cdn.skillux.dev/skills/example.zip", base))
+        for url in ["https://skillux.dev.evil.example/pack.zip", "https://evilskillux.dev/pack.zip", "http://skillux.dev/pack.zip"]:
+            with self.subTest(url=url):
+                self.assertFalse(client.trusted_download(url, base))
+
+    def test_unpack_reads_a_downloaded_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / "pack.zip"
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr("SKILL.md", "# Example\n")
+                archive.writestr("references/guide.md", "Guide\n")
+            target = Path(temp) / "out"
+            target.mkdir()
+            client.unpack(source, target)
+            self.assertEqual((target / "SKILL.md").read_text(), "# Example\n")
+            self.assertTrue((target / "references/guide.md").is_file())
+
+    def test_fetch_pack_rejects_server_download_urls_outside_the_service(self):
+        with tempfile.TemporaryDirectory() as temp:
+            project = Path(temp)
+            (project / ".web-builder").mkdir()
+            (project / ".web-builder/project.json").write_text(json.dumps({"schemaVersion": 1}))
+
+            def fake_download(url, token, destination):
+                destination.write_bytes(json.dumps({"downloadUrl": "https://evil.example/pack.zip"}).encode())
+                return "application/json", "1.0.0"
+
+            with patch.object(client, "credentials", return_value="private-token"), patch.object(client, "api_base", return_value="https://skillux.dev/api"), patch.object(client, "download", side_effect=fake_download):
+                with self.assertRaisesRegex(client.SkilluxError, "outside the Skillux service"):
+                    client.fetch_pack("example", "frontend", project)
 
     def test_catalog_does_not_proceed_if_login_is_not_verified(self):
         with patch.object(client.sys, "argv", ["skillux.py", "catalog"]), patch.object(client, "ensure_login", side_effect=client.AuthenticationRequired("not approved")), patch.object(client, "request") as request:

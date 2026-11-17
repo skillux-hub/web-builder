@@ -71,9 +71,10 @@ def resolve(brief, foundation="standard"):
     if admin:
         add("admin", f"admin:{admin_source}")
     foundation_spec = catalog["foundations"][foundation]
+    requested = {canonical(name) for name in brief["modules"]}
     for name in foundation_spec.get("requiredBriefModules", []):
-        if name not in brief["modules"]:
-            raise ValueError(f"{foundation} foundation requires an explicitly requested {name} module")
+        if canonical(name) not in requested:
+            raise ValueError(f"{foundation} foundation requires an explicitly requested {name} module (or its alias)")
     for field in foundation_spec.get("requiredFields", []):
         if not brief.get(field):
             raise ValueError(f"{foundation} foundation requires {field}")

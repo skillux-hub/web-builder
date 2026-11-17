@@ -7,6 +7,10 @@ import { body, checkOrigin } from "@/lib/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ path: string[] }> };
+// Simulated payments are a local testing aid; never expose them in a production build.
+function requireTestPaymentsEnabled() {
+  if (process.env.NODE_ENV === "production") throw new BusinessError("Test payments are disabled in production", 404);
+}
 async function handle(request: Request, context: Context) {
   try {
     const { path } = await context.params;
@@ -23,11 +27,13 @@ async function handle(request: Request, context: Context) {
       const order = await readOrder(path[1], token);
       if (path.length === 2 && method === "GET") return reply({ order });
       if (path.length === 3 && path[2] === "test-payment" && method === "POST") {
+        requireTestPaymentsEnabled();
         const input = await body(request);
         return reply({ order: await testPayment(order.id, input.eventId, input.outcome), mode: "test" });
       }
     }
     if (route === "test-payments" && method === "POST") {
+      requireTestPaymentsEnabled();
       const expected = process.env.TEST_PAYMENT_SECRET || "";
       const supplied = request.headers.get("x-test-payment-secret") || "";
       if (expected.length < 32 || Buffer.byteLength(expected) !== Buffer.byteLength(supplied) || !timingSafeEqual(Buffer.from(expected), Buffer.from(supplied))) throw new BusinessError("Invalid test payment secret", 401);

@@ -6,7 +6,9 @@ export const permissionLabels = {
   "settings.manage": "Manage system settings", "seo.manage": "Manage SEO",
 } as const;
 export type Permission = keyof typeof permissionLabels;
-const commerceRequested=((config as {modules?:string[]}).modules||[]).includes("orders");
+// site.config.json records resolved module IDs; older projects may still store brief IDs.
+const modules = (config as { modules?: string[] }).modules || [];
+const commerceRequested = modules.includes("commerce") || modules.includes("orders");
 export const defaultRoles=[{slug:"owner",name:"Owner",permissions:["*"]},...(commerceRequested?[
 {slug:"manager",name:"Store manager",permissions:["dashboard.view","catalog.view","catalog.manage","orders.view","orders.manage","customers.view","customers.manage"]},
 {slug:"catalog",name:"Catalog editor",permissions:["dashboard.view","catalog.view","catalog.manage"]},

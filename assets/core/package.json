@@ -9,7 +9,6 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "configure": "tsx scripts/configure.ts",
     "db:generate": "prisma generate --config prisma7.config.ts",
     "db:push": "tsx scripts/prepare-db.ts && prisma db push --config prisma7.config.ts",
     "setup": "npm run db:generate && npm run db:push && tsx prisma/seed.ts",

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Discover public Skillux templates and fetch only selected, entitled packs."""
 import argparse
-import io
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -21,6 +20,7 @@ import webbrowser
 MAX_TOTAL = 100 * 1024 * 1024
 MAX_FILE = 40 * 1024 * 1024
 MAX_ENTRIES = 500
+SKILLUX_CLI = "skillux@0.1.3"
 
 
 class SkilluxError(Exception):
@@ -71,18 +71,13 @@ def origin(url):
     return parsed.scheme, parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80)
 
 
-def request(url, token=None, _redirects=0):
+def open_response(url, token=None, _redirects=0):
     validate_url(url)
-    # JSON first returns version metadata; its downloadUrl then uses ?format=zip.
     headers = {"Accept": "application/json", "User-Agent": "Skillux-Web-Builder/1"}
     if token:
         headers["Authorization"] = "Bearer " + token
     try:
-        with urllib.request.build_opener(NoRedirect).open(urllib.request.Request(url, headers=headers), timeout=30) as response:
-            payload = response.read(MAX_TOTAL + 1)
-            if len(payload) > MAX_TOTAL:
-                raise SkilluxError("Response exceeds 100 MB limit")
-            return payload, response.headers
+        return urllib.request.build_opener(NoRedirect).open(urllib.request.Request(url, headers=headers), timeout=30)
     except urllib.error.HTTPError as error:
         if error.code in (301, 302, 303, 307, 308):
             location = error.headers.get("location")
@@ -91,7 +86,7 @@ def request(url, token=None, _redirects=0):
             next_url = urllib.parse.urljoin(url, location)
             if validate_url(url).scheme == "https" and validate_url(next_url).scheme != "https":
                 raise SkilluxError("Refusing insecure download redirect") from None
-            return request(next_url, token if origin(next_url) == origin(url) else None, _redirects + 1)
+            return open_response(next_url, token if origin(next_url) == origin(url) else None, _redirects + 1)
         if error.code == 401:
             raise AuthenticationRequired("Session expired. Run: npx skillux login") from None
         if error.code == 403:
@@ -109,6 +104,45 @@ def request(url, token=None, _redirects=0):
         raise SkilluxError(f"Skillux request failed (HTTP {error.code})") from None
     except (urllib.error.URLError, TimeoutError, OSError):
         raise SkilluxError("Skillux is unreachable; choices were preserved. Retry when connected") from None
+
+
+def request(url, token=None):
+    # JSON first returns version metadata; its downloadUrl then uses ?format=zip.
+    with open_response(url, token) as response:
+        payload = response.read(MAX_TOTAL + 1)
+        if len(payload) > MAX_TOTAL:
+            raise SkilluxError("Response exceeds 100 MB limit")
+        return payload, response.headers
+
+
+def download(url, token, destination):
+    """Stream a download to disk so large template packs never sit in memory."""
+    with open_response(url, token) as response:
+        content_type = response.headers.get("content-type", "")
+        version = response.headers.get("x-skillux-version", "0.0.0")
+        total = 0
+        with destination.open("xb") as output:
+            while True:
+                chunk = response.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_TOTAL:
+                    raise SkilluxError("Response exceeds 100 MB limit")
+                output.write(chunk)
+    return content_type, version
+
+
+def trusted_download(url, base):
+    """Allow the Skillux origin and its subdomains for server-supplied pack URLs."""
+    try:
+        target, service = validate_url(url), validate_url(base)
+    except SkilluxError:
+        return False
+    if (target.scheme, target.hostname, target.port) == (service.scheme, service.hostname, service.port):
+        return True
+    host, service_host = target.hostname or "", service.hostname or ""
+    return host.endswith("." + service_host)
 
 
 def parse_json(payload):
@@ -142,7 +176,7 @@ def ensure_login():
     print("Opening official Skillux authorization. Complete approval in the browser; waiting for login...", file=sys.stderr, flush=True)
     # The official CLI opens its device approval URL and waits for authorization.
     # Keep its public approval instructions visible; credentials are written by the CLI.
-    completed = subprocess.run([npx, "--yes", "skillux", "login"], stdout=sys.stderr, stderr=sys.stderr)
+    completed = subprocess.run([npx, "--yes", SKILLUX_CLI, "login"], stdout=sys.stderr, stderr=sys.stderr)
     if completed.returncode:
         raise SkilluxError("Skillux authorization was not completed; no next step was started")
     status = auth_status()
@@ -199,9 +233,9 @@ def safe_relative(name):
     return Path(*parts)
 
 
-def unpack(payload, target):
+def unpack(source, target):
     try:
-        with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        with zipfile.ZipFile(source) as archive:
             entries = archive.infolist()
             if len(entries) > MAX_ENTRIES or sum(item.file_size for item in entries) > MAX_TOTAL:
                 raise SkilluxError("Archive exceeds file count or size limit")
@@ -298,27 +332,31 @@ def fetch_pack(slug, role, project):
     project, state_path, state, parent, destination = fetch_preflight(slug, role, project)
     token = credentials()
     base = api_base()
-    payload, headers = request(f"{base}/me/skills/{slug}/download", token)
-    version = headers.get("x-skillux-version", "0.0.0")
-    meta = None
-    if "application/json" in headers.get("content-type", ""):
-        meta = parse_json(payload)
-        if not isinstance(meta, dict):
-            raise SkilluxError("Invalid download metadata")
-        version = str(meta.get("version", version))
-        if "files" not in meta:
-            url = meta.get("downloadUrl")
-            if not isinstance(url, str):
-                raise SkilluxError("Download response has neither files nor downloadUrl")
-            same_origin = origin(url) == origin(base)
-            payload, _ = request(url, token if same_origin else None)
     parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".download-", dir=parent) as temp:
-        staging = Path(temp)
+        staging = Path(temp) / "staging"
+        staging.mkdir()
+        payload_file = Path(temp) / "payload"
+        content_type, version = download(f"{base}/me/skills/{slug}/download", token, payload_file)
+        meta = None
+        if "application/json" in content_type:
+            meta = parse_json(payload_file.read_bytes())
+            if not isinstance(meta, dict):
+                raise SkilluxError("Invalid download metadata")
+            version = str(meta.get("version", version))
+            if "files" not in meta:
+                url = meta.get("downloadUrl")
+                if not isinstance(url, str):
+                    raise SkilluxError("Download response has neither files nor downloadUrl")
+                if not trusted_download(url, base):
+                    raise SkilluxError("Download URL is outside the Skillux service")
+                same_origin = origin(url) == origin(base)
+                payload_file.unlink()
+                download(url, token if same_origin else None, payload_file)
         if meta is not None and "files" in meta:
             write_files(meta["files"], staging)
         else:
-            unpack(payload, staging)
+            unpack(payload_file, staging)
         root = normalize_root(staging)
         # Rename complete download before touching project choices.
         if root == staging:

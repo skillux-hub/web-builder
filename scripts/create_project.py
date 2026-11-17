@@ -2,10 +2,18 @@
 """Create a relocatable local full-stack business foundation; never overwrite work."""
 import argparse
 import json
+import os
 from pathlib import Path
 import secrets
 import shutil
 import importlib.util
+import tempfile
+
+
+def write_private(path, content):
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(content)
 
 
 def composition(brief, foundation):
@@ -32,6 +40,20 @@ def create(output, brief, foundation="standard"):
     if output.exists() and (not output.is_dir() or any(output.iterdir())):
         raise ValueError("Output is not empty; existing content was preserved")
     plan = composition(brief, foundation)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    # Build into a sibling directory and swap at the end, so a failed run never
+    # leaves a partial project that would also block the next attempt.
+    with tempfile.TemporaryDirectory(prefix=f".{output.name}-", dir=output.parent) as temp:
+        staging = Path(temp) / "project"
+        staging.mkdir()
+        build(staging, skill, brief, foundation, plan)
+        if output.exists():
+            output.rmdir()
+        os.replace(staging, output)
+    return output
+
+
+def build(output, skill, brief, foundation, plan):
     admin_required = plan["adminRequired"]
     for layer in plan["assetLayers"]:
         shutil.copytree(skill / "assets" / layer, output, dirs_exist_ok=True)
@@ -51,16 +73,16 @@ def create(output, brief, foundation="standard"):
     payment_env = f'TEST_PAYMENT_SECRET="{secrets.token_hex(32)}"\n' if foundation == "commerce" else ""
     password = secrets.token_urlsafe(18) if admin_required else None
     admin_env = f'ADMIN_EMAIL="admin@local.test"\nADMIN_PASSWORD="{password}"\n' if admin_required else ""
-    (output / ".env").write_text(
-        'DATABASE_URL="file:./prisma/dev.db"\n' + admin_env + payment_env, encoding="utf-8")
+    write_private(output / ".env",
+        'DATABASE_URL="file:./prisma/dev.db"\n' + admin_env + payment_env)
     (output / ".env.example").write_text(
         'DATABASE_URL="file:./prisma/dev.db"\n' + ('ADMIN_EMAIL="admin@local.test"\nADMIN_PASSWORD=""\n' if admin_required else "") +
         ('TEST_PAYMENT_SECRET=""\n' if foundation == "commerce" else ""), encoding="utf-8")
     if admin_required:
-        (output / "LOCAL_ACCESS.md").write_text(
+        write_private(output / "LOCAL_ACCESS.md",
             "# Local test access\n\nEmail: admin@local.test\n\nPassword: " + password +
-            "\n\nThese are local test credentials. Do not publish this file or .env.\n", encoding="utf-8")
-    config = {"brand": brief["brand"], "locale": brief["locale"], "modules": brief["modules"], "adminRequired": admin_required}
+            "\n\nThese are local test credentials. Do not publish this file or .env.\n")
+    config = {"brand": brief["brand"], "locale": brief["locale"], "modules": sorted(plan["modules"]), "adminRequired": admin_required}
     if "websiteType" in brief:
         config["websiteType"] = brief["websiteType"]
     if "region" in brief:
@@ -76,7 +98,6 @@ def create(output, brief, foundation="standard"):
              "adminArchitecture": {"entry": "/admin", "login": "/admin/login", "separateLayout": True,
                                    "coreModules": ["roles", "permissions", "administrators", "audit", "settings", "seo", "password"]} if admin_required else None, "checks": {}}
     (state_dir / "project.json").write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return output
 
 
 def main():
