@@ -94,6 +94,13 @@ class CompositionTest(unittest.TestCase):
         self.assertEqual(state["brief"]["modules"], ["commerce"])
         self.assertIn("commerce", json.loads((path / "site.config.json").read_text(encoding="utf-8"))["modules"])
 
+    def test_failed_generation_leaves_no_partial_output(self):
+        with patch.object(creator, "build", side_effect=OSError("disk full")):
+            with self.assertRaises(OSError):
+                creator.create(self.root / "project", {**self.brief, "adminRequired": False})
+        self.assertFalse((self.root / "project").exists())
+        self.assertEqual(list(self.root.iterdir()), [])
+
     def test_invalid_admin_and_type_fields_fail_before_writing(self):
         for fields in [{"adminRequired": "false"}, {"singlePage": 1}, {"websiteType": []}, {"additionalWebsiteTypes": "booking"}]:
             with self.subTest(fields=fields), self.assertRaises(ValueError):

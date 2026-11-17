@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run composition and gate tests
+        run: python -B -m unittest discover -s tests -v
+
+  generated-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: assets/core/package-lock.json
+      - name: Generate a project with admin
+        run: |
+          cat > "$RUNNER_TEMP/brief.json" <<'JSON'
+          {
+            "brand": "CI Example",
+            "business": "Service presentation and inquiries",
+            "locale": "en-GB",
+            "websiteType": "business",
+            "adminRequired": true,
+            "modules": ["services", "cases", "inquiries"]
+          }
+          JSON
+          python scripts/create_project.py "$RUNNER_TEMP/site" --brief "$RUNNER_TEMP/brief.json"
+      - name: Install dependencies
+        working-directory: ${{ runner.temp }}/site
+        run: npm ci
+      - name: Typecheck
+        working-directory: ${{ runner.temp }}/site
+        run: npm run typecheck
+      - name: Test
+        working-directory: ${{ runner.temp }}/site
+        run: npm test
