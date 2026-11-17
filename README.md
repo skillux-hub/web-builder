@@ -1,103 +1,106 @@
 # Web Builder
 
-面向 AI 编程代理的业务网站构建技能：从业务需求出发，按**网站类型 × 功能模块**确定范围，再通过 Skillux 选择设计模板、生成应用基础、接通业务流程并验证交付。
+**English** | [简体中文](README.zh-CN.md)
 
-适合模板式网站创建，以及继续维护由本技能创建的项目。技能入口是 [SKILL.md](SKILL.md)，可执行选型配置位于 [config/catalog.json](config/catalog.json)。
+A business website-building skill for AI coding agents. Define the scope through **website types × functional modules**, choose Skillux design templates, generate an application foundation, connect business workflows, and verify the result.
 
-## 工作方式
+Use it to create template-based websites or continue projects built with this skill. Start with [SKILL.md](SKILL.md); executable presets and dependencies live in [config/catalog.json](config/catalog.json).
 
-**业务需求 → 网站类型 → 功能模块 → 前台/后台模板 → 实现与集成 → 验证与交付**
+## How it works
 
-- 按实际业务流程选择模块，支持混合类型，不给所有网站默认加入商城或会员。
-- 按需生成后台；不需要后台时，跳过管理页面、管理接口、管理员表和管理员凭据。
-- 模板选型包含预览、授权检查和版本记录；已生成的项目可以读取记录继续工作。
-- 短信按用户/商户所属国家与收件国家推荐 SDK；物流结合商户国家、发货仓和收货地推荐 SDK/API。
-- 实现状态与验证结果分别记录，区分待实现、已有脚手架、已验证及受配置阻塞的工作。
+**Business requirements → Website type → Functional modules → Frontend/admin templates → Implementation → Verification and delivery**
 
-## 安装与开始使用
+- Compose modules around real workflows, including hybrid sites, without adding commerce or membership to every project.
+- Generate admin features only when needed. Admin-free projects omit management pages/APIs, administrator models, and administrator credentials.
+- Select templates with previews, entitlement checks, and version records that support continuing existing work.
+- Recommend SMS SDKs using the user/merchant country and recipient destinations; recommend shipping SDKs/APIs using merchant country, warehouse origin, and destination.
+- Record implementation status separately from verification evidence, distinguishing planned work, scaffolding, verified behavior, and configuration blockers.
 
-通过 Skills CLI 安装，并按提示选择代理和安装范围：
+## Install and get started
+
+Install through the Skills CLI and choose your agent and installation scope as prompted:
 
 ```bash
 npx skills add https://github.com/skillux-hub/web-builder --skill web-builder
 ```
 
-也可以克隆仓库，按照所用代理的技能安装方式放置完整目录；保留 `SKILL.md`、`references`、`config`、`scripts` 和 `assets` 的相对结构。
+Alternatively, clone the repository and install the complete directory using your agent's skill installation method. Preserve the relative structure of `SKILL.md`, `references`, `config`, `scripts`, and `assets`.
 
-安装后可使用这样的需求：
+Example request:
 
 ```text
-使用 $web-builder 为一家面向英国市场的维修公司建站。
-网站使用英语，需要服务介绍、案例、预约和客户询盘，以及管理后台。
-帮我选择前台和后台模板，完成业务实现并验证，先交付本地项目。
+Use $web-builder to build a website for a repair company serving the UK.
+The site should be in English, with services, case studies, bookings,
+customer inquiries, and an admin area. Help me choose frontend and admin
+templates, implement and verify the workflows, and deliver a local project first.
 ```
 
-已有项目可以直接说明修改目标。代理会先读取 `.web-builder/project.json` 和现有代码，复用已确定的语言、模板、模块与服务商选择。
+For an existing project, describe the change you need. The agent first reads `.web-builder/project.json` and the application code, reusing recorded language, template, module, and provider decisions.
 
-## 11 类网站
+## 11 website types
 
-| 类型 ID | 适用流程 |
+| Type ID | Workflow |
 | --- | --- |
-| `landing` | 单页展示、活动宣传、产品发布 |
-| `business` | 企业官网、服务介绍、案例及多页作品集 |
-| `commerce` | 单一经营方的商品销售与订单履约 |
-| `content` | 博客、资讯、知识内容与作品发布 |
-| `booking` | 时段预约、日期区间预订、活动名额 |
-| `education` | 课程展示、报名管理、在线学习 |
-| `directory` | 分类目录、信息列表、发现与联系 |
-| `dashboard` | 数据看板、运营后台与工作空间 |
-| `tool` | 计算器、AI 工具、文件转换与任务结果 |
-| `community` | 论坛、问答、成员内容与审核 |
-| `marketplace` | 多商家入驻、交易、佣金与结算 |
+| `landing` | Single-page presentations, campaigns, and product launches |
+| `business` | Company sites, services, case studies, and multi-page portfolios |
+| `commerce` | Product sales and fulfillment for a single operator |
+| `content` | Blogs, publications, knowledge content, and portfolios |
+| `booking` | Appointment slots, date-range reservations, and event capacity |
+| `education` | Course presentation, enrollment, and online learning |
+| `directory` | Categorized listings, discovery, and contact |
+| `dashboard` | Data consoles, operations, and workspaces |
+| `tool` | Calculators, AI tools, file conversion, and execution results |
+| `community` | Forums, Q&A, member content, and moderation |
+| `marketplace` | Seller onboarding, transactions, commissions, and settlement |
 
-详细边界、模块映射和验收场景见 [网站类型索引](references/website-types.md)。例如，目录展示不等于多商家交易；课程展示也不默认包含完整在线教学系统。
+See the [website type index](references/website-types.md) for scope, module mappings, and acceptance scenarios. A listing directory does not automatically include multi-seller transactions; a course presentation site does not automatically include a full learning platform.
 
-## 26 个功能模块
+## 26 functional modules
 
-| 能力组 | 模块 ID |
+| Capability group | Module IDs |
 | --- | --- |
-| 管理与身份 | `admin`、`authentication`、`tenancy` |
-| 内容与组织 | `content`、`taxonomy`、`search`、`seo` |
-| 列表与资源 | `lists`、`media`、`files` |
-| 交易与服务 | `commerce`、`payments`、`shipping`、`after-sales` |
-| 客户与学习 | `inquiries`、`bookings`、`learning` |
-| 周期与权益 | `subscriptions`、`entitlements` |
-| 通知与通道 | `notifications`、`sms` |
-| 平台与执行 | `directory`、`execution`、`community`、`marketplace`、`analytics` |
+| Administration and identity | `admin`, `authentication`, `tenancy` |
+| Content and organization | `content`, `taxonomy`, `search`, `seo` |
+| Lists and resources | `lists`, `media`, `files` |
+| Transactions and fulfillment | `commerce`, `payments`, `shipping`, `after-sales` |
+| Customers and learning | `inquiries`, `bookings`, `learning` |
+| Periods and access | `subscriptions`, `entitlements` |
+| Notifications and channels | `notifications`, `sms` |
+| Platforms and execution | `directory`, `execution`, `community`, `marketplace`, `analytics` |
 
-[模块索引](references/modules.md)说明每个模块的适用条件、依赖和验收规则。分类与标签使用 `taxonomy`；支付处理交易，订阅管理周期，访问权益决定实际可访问的功能、内容或额度。
+The [module index](references/modules.md) defines selection criteria, dependencies, and acceptance rules. Categories and tags use `taxonomy`; payments manage transactions, subscriptions manage periods, and entitlements control access to features, content, and usage allowances.
 
-服务商选型参考：[短信 SDK 推荐](references/sms-providers.md) · [物流 SDK/API 推荐](references/shipping-providers.md)。推荐候选不等于账户已开通、路线已覆盖或服务已经接入。
+Provider guides: [SMS SDK recommendations](references/sms-providers.md) · [Shipping SDK/API recommendations](references/shipping-providers.md). A recommendation does not establish an active account, route coverage, or a completed integration.
 
-## 当前可执行能力
+## What is executable today
 
-| 内容 | 当前范围 |
+| Component | Current scope |
 | --- | --- |
-| 组合解析 | 网站类型、显式模块、依赖、排除项、别名及后台决策；支持只预览计划 |
-| `standard` 基础 | Next.js、TypeScript、Prisma、SQLite、站点设置，以及按需加入的后台基础 |
-| `commerce` 基础 | 示例商品、SKU、库存、购物车、订单、访问密钥和模拟支付；按需加入后台 |
-| Skillux 工具 | 模板目录查询、下载授权检查、选定模板下载及版本记录 |
-| 其余业务模块 | 按需加载的实施规范；由代理继续实现和验证，不是已经完成的插件包 |
+| Composition resolver | Website types, explicit modules, dependencies, exclusions, aliases, and admin decisions; supports plan previews |
+| `standard` foundation | Next.js, TypeScript, Prisma, SQLite, site settings, and optional admin scaffolding |
+| `commerce` foundation | Example products, SKUs, stock, cart, orders, access keys, simulated payments, and optional admin scaffolding |
+| Skillux tools | Catalog discovery, entitlement checks, selected template downloads, and version recording |
+| Other business modules | Instructions loaded as needed for implementation and verification, rather than completed installable plugins |
 
-**选择模块不等于实现模块，生成基础不等于完成网站。** 所选模板仍需要真实迁移；支付、短信、邮件、物流等外部服务仍需要有效配置与验证。模拟支付不会真实扣款。多商家隔离、结算、预约引擎等不由基础生成器自动提供。
+**Selecting a module does not implement it, and generating a foundation does not complete a website.** Selected templates still require real migration. Payments, SMS, email, shipping, and other external services require valid configuration and verification. Simulated payments do not charge money. The generator does not automatically supply seller isolation, settlements, or booking engines.
 
-## 开发者快速使用
+## Developer quickstart
 
-基础生成工具需要 Python 3.10+；生成应用需要 Node.js 22.12+、npm，以及运行 SQLite 原生依赖的环境。额外接入的 SDK 可能有更高的运行时要求，应按实际选择核对。
+The generation tools require Python 3.10+. Generated applications require Node.js 22.12+, npm, and an environment that supports SQLite native dependencies. Additional SDKs may have higher runtime requirements; check the chosen version before integration.
 
 ```bash
 git clone https://github.com/skillux-hub/web-builder.git
 cd web-builder
 ```
 
-在仓库外保存需求文件，例如 `../brief.json`：
+Save a brief outside the repository, for example as `../brief.json`:
 
 ```json
 {
   "brand": "Example Services",
-  "business": "服务展示、案例和客户询盘",
-  "locale": "zh-CN",
-  "region": "China",
+  "business": "Service presentation, case studies, and customer inquiries",
+  "locale": "en-GB",
+  "region": "United Kingdom",
   "websiteType": "business",
   "adminRequired": true,
   "adminRequirementSource": "user",
@@ -105,7 +108,7 @@ cd web-builder
 }
 ```
 
-在仓库根目录预览组合，再生成到仓库外的空目录：
+From the repository root, preview the composition and generate into an empty directory outside the repository:
 
 ```bash
 python scripts/composition.py --brief ../brief.json
@@ -119,15 +122,15 @@ npm run setup
 npm run dev
 ```
 
-打开终端显示的本地地址。启用后台时可访问 `/admin`，凭据位于生成项目的 `LOCAL_ACCESS.md`；该文件与 `.env` 应保持私有。
+Open the local URL shown in the terminal. If admin is enabled, visit `/admin`; generated credentials are in the project's `LOCAL_ACCESS.md`. Keep that file and `.env` private.
 
-需要电商基础时，在需求中明确包含 `orders` 和三位币种代码 `currency`，并给预览/生成命令加上 `--foundation commerce`。单独选择 `websiteType: "commerce"` 不会切换生成基础。单页网站需要明确 `adminRequired`；设为 `false` 可生成无后台项目。
+For the commerce foundation, explicitly include `orders` and a three-letter `currency` code in the brief, and add `--foundation commerce` to the preview/generation commands. Setting `websiteType: "commerce"` alone does not switch the executable foundation. Single-page sites require an explicit `adminRequired` decision; set it to `false` for an admin-free project.
 
-生成器不会覆盖非空目录，也不会自动迁移已有应用。完整输入规则与续做方式见 [组合配置](references/composition.md)和[实现说明](references/implementation.md)。
+The generator refuses to overwrite nonempty directories and does not automatically migrate existing applications. See [composition configuration](references/composition.md) and [implementation guidance](references/implementation.md) for full input and continuation rules.
 
-## 模板选型与授权
+## Templates and entitlement
 
-模板目录可匿名查询；下载选定模板前需要 Skillux 登录和有效授权：
+Catalog discovery is anonymous. Downloading selected templates requires Skillux login and valid entitlement:
 
 ```bash
 python scripts/skillux.py catalog --role frontend --industry services
@@ -137,19 +140,19 @@ python scripts/skillux.py check <template-slug>
 python scripts/skillux.py fetch <template-slug> --role frontend --project ../example-site
 ```
 
-无需后台时跳过后台模板。登录凭据由 Skillux CLI 管理，不写入需求或项目记录。下载包保存在项目私有目录中；本仓库不包含远程模板库，也不自动购买模板。详情见 [Skillux 选型与授权](references/skillux.md)。
+Skip admin templates when no admin area is needed. The Skillux CLI manages login credentials; do not put them in briefs or project records. Downloads remain in the project's private template directory. This repository does not bundle the remote template library or purchase templates automatically. See [Skillux discovery and entitlement](references/skillux.md).
 
-## 项目记录与验证
+## Project records and verification
 
-`.web-builder/project.json` 保存原始需求、组合计划、实际模板版本、实现状态和检查结果。`pending` 表示待实现，`scaffolded` 表示已有基础；业务实现与模板集成只有通过对应验证后才能标记完成。
+`.web-builder/project.json` records the original brief, composition plan, actual template versions, implementation status, and checks. `pending` means implementation is still required; `scaffolded` means a foundation exists. Business implementation and template integration can be marked complete only after their corresponding checks pass.
 
-在技能仓库运行 Python 检查：
+Run Python checks from the skill repository:
 
 ```bash
 python -B -m unittest discover -s tests -v
 ```
 
-在生成项目运行应用检查：
+Run application checks inside a generated project:
 
 ```bash
 npm run typecheck
@@ -157,21 +160,21 @@ npm test
 npm run build
 ```
 
-关键业务仍需验证用户操作、服务端结果、数据持久化、权限和失败场景，构建成功不代表业务流程全部可用。HTTP 检查仅用于隔离的本地测试项目；外部服务优先使用沙箱或本地测试接收端。完整要求见 [验证说明](references/verification.md)。默认交付本地项目，部署与真实外部操作按用户要求执行。
+Key workflows also need verification of user actions, server results, persistence, permissions, and failures. A successful build does not prove every business workflow works. Use HTTP checks only against isolated local test projects, and prefer provider sandboxes or local sinks for external services. See [verification guidance](references/verification.md). Local project delivery is the default; deployment and real external operations follow the user's request.
 
-## 仓库结构
+## Repository structure
 
 ```text
 web-builder/
-├── SKILL.md              技能入口与路由
-├── agents/               代理界面元数据
-├── config/               网站类型、模块依赖及资产层配置
-├── references/           类型、模块、实现与服务商指南
-├── assets/               core / standard / commerce / 可选 admin 资产层
-├── scripts/              组合预览、项目生成、Skillux 工具
-└── tests/                组合与本地 HTTP 检查
+├── SKILL.md              Skill entry point and routing
+├── agents/               Agent interface metadata
+├── config/               Website types, module dependencies, and asset layers
+├── references/           Types, modules, implementation, and provider guides
+├── assets/               core / standard / commerce / optional admin layers
+├── scripts/              Composition preview, generation, and Skillux tools
+└── tests/                Composition and local HTTP checks
 ```
 
-## 许可证
+## License
 
-本仓库采用 [MIT License](LICENSE)。另行取得的模板、图片、字体及第三方组件遵循其各自的授权条款，仓库许可证不会替代这些授权。
+This repository is licensed under the [MIT License](LICENSE). Separately acquired templates, images, fonts, and third-party components retain their own license terms; the repository license does not replace them.
