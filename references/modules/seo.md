@@ -1,0 +1,7 @@
+# SEO and public page metadata
+
+Load for public pages, including static projects without admin. Admin-enabled sites expose relevant settings through protected forms; sites without admin use source/configuration fields.
+
+- SEO: manage site name, site SEO title, keywords, description, production origin, and indexing, producing real metadata. Product/article/service detail pages and informational pages have independent editing. Their title is always `content title - Site name`, derived from the actual product/article/page name, without a separate per-page SEO-title input. Append the site name centrally exactly once and propagate site-name changes; individual pages cannot choose separator formats. Keywords and descriptions are required with UI requirements, server nonempty/length checks, persistence, and actual `meta keywords`/`meta description`. Comma-separated keywords are allowed; descriptions are plain text, not body HTML. Provide explicit migration or incomplete states for old missing fields and preserve existing user values. Test projects default to no indexing; admin/account/private pages remain noindex. SEO fields do not guarantee ranking or indexing.
+
+Use [Content](content.md) for publishing and safe plain-text extraction. Follow [SEO verification](../verification.md#uploads-and-seo): save/reload and inspect actual rendered metadata; fields alone do not establish integration.

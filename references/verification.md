@@ -8,6 +8,8 @@
 
 ## Project
 
+Select acceptance scope from the recorded [website type](website-types.md) and [modules](modules.md). Apply common visual/build/persistence checks where relevant; skip unselected commerce, accounts, shipping, and admin checks. Verify each selected module's workflow, dependencies, and failure cases. Old reference paths remain compatibility routers to the canonical module rules.
+
 ### Real interaction and completion criteria
 
 - For every requested key business action, exercise at least one successful path through user action -> visible feedback -> server/persisted result. A button, attractive screenshot, HTTP 200, typecheck, or build alone does not prove usable behavior.

@@ -10,6 +10,9 @@ Write requirements JSON to a temporary file outside the project, then create a n
   "business": "Customer inquiries and service presentation",
   "locale": "en-GB",
   "region": "United Kingdom",
+  "websiteType": "business",
+  "adminRequired": true,
+  "adminRequirementSource": "multi-page-default",
   "modules": ["services", "cases", "inquiries"],
   "notes": "Service pages, case publishing, customer inquiries and admin processing; no store needed"
 }
@@ -24,6 +27,12 @@ Use optional `--foundation commerce` only when selling/ordering is explicitly re
 The foundation pins tested dependencies and generates `package-lock.json`. Require Node.js >=22.12 and Python >=3.10, with system support for SQLite native modules. Run `npm install`, `npm run setup`, then `npm run dev`. Setup initializes schema and missing demo data without resetting existing orders.
 
 `create_project.py` generates a random administrator password in `.env` and writes access details to Git-ignored `LOCAL_ACCESS.md`; commerce additionally generates a simulated payment secret. Do not copy credentials into requirements or commit them. Without real payment configuration, use local test flows only.
+
+## Type and module continuation
+
+Use [Website types](website-types.md) and [Functional modules](modules.md) to record websiteType, optional additionalWebsiteTypes, and actual brief.modules. These fields describe requirements; they do not select/install assets or implement modules automatically. Keep existing module IDs and schemaVersion 1 continuation compatible. Older projects without a type can infer it from their recorded brief; do not reinitialize or silently change admin, provider, or business choices. The generator preserves extra brief fields, so no state migration is required for this documentation refactor.
+
+For selected modules, record source, dependencies, configuration state, implemented surfaces, remaining work, and acceptance evidence in additional nonsensitive continuation fields. Preserve templates, checks, and existing implementation statuses. Do not mark a module completed merely because it was selected or scaffolded.
 
 ## Template migration
 
