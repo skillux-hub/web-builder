@@ -2,6 +2,10 @@
 
 Read before implementing registration, membership, or third-party login for any website, not just stores.
 
+For selected email/SMS verification/reset delivery, reuse [Notifications](notifications.md) while keeping token/code generation, expiry and identity checks here. Use [Entitlements](entitlements.md) for feature/content grants and [Tenancy](tenancy.md) for organizational membership; login alone does not establish either. Password-only or external-provider login need not add a notification service.
+
+For actual phone-code login/verification, also select [SMS](sms.md) and use its configured delivery adapter or provider-managed verification product. Authentication retains challenge binding, expiry, attempt limits, one-time consumption and session creation. SMS acceptance/delivery alone cannot mark a phone verified. Mainland-China login defaults describe the chosen methods; they do not establish a configured SMS service or justify simulated verification.
+
 ## Market defaults and minimal questions
 
 Read existing requirements first; explicit user choices take precedence. When the target market is known and there are no conflicting requirements, use these customer login defaults without asking about each common method:

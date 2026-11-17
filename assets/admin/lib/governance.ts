@@ -2,7 +2,8 @@ import { db } from "./db";
 import { adminIdentity, digest, hashPassword, verifyPassword } from "./auth";
 import { allowed, permissionLabels, permissionList, type Permission } from "./permissions";
 import { BusinessError, text } from "./errors";
-import config from "../site.config.json";
+import { defaultSettings, settings } from "./settings";
+export { defaultSettings, settings } from "./settings";
 export type Actor = Awaited<ReturnType<typeof adminIdentity>>;
 export function authorize(actor: Actor, permission: Permission) { if (!allowed(actor.permissions,permission)) throw new BusinessError("You do not have permission for this action",403); }
 export async function audit(actor: Actor, action: string, target = "", details: Record<string,unknown> = {}) {
@@ -48,8 +49,6 @@ export async function changePassword(actor:Actor,input:Record<string,unknown>){
   await db.$transaction([db.admin.update({where:{id:actor.id},data:{passwordHash:hashPassword(next)}}),db.adminSession.deleteMany({where:{adminId:actor.id}})]);
   await audit(actor,"administrator.password",actor.id,{sessionsRevoked:true});
 }
-export const defaultSettings={storeName:config.brand,contactEmail:"",maintenance:false,lowStockThreshold:5,seoTitle:config.brand,seoDescription:"Discover our collection and find your next favorite.",siteUrl:"",allowIndexing:false};
-export async function settings(){const row=await db.systemSetting.findUnique({where:{key:"site"}});try{return {...defaultSettings,...JSON.parse(row?.value||"{}")};}catch{return defaultSettings;}}
 export async function saveSettings(actor:Actor,input:Record<string,unknown>,seo=false){
   authorize(actor,seo?"seo.manage":"settings.manage");const current=await settings();const next={...current};
   if(seo){next.seoTitle=text(input.seoTitle,"SEO title",120);next.seoDescription=text(input.seoDescription,"SEO description",320);next.siteUrl=typeof input.siteUrl==="string"?input.siteUrl.trim():"";if(next.siteUrl){try{if(new URL(next.siteUrl).protocol!=="https:")throw new Error();}catch{throw new BusinessError("Site URL must use HTTPS");}}next.allowIndexing=input.allowIndexing===true;}

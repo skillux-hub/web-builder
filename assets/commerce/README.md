@@ -10,7 +10,7 @@ npm run setup
 npm run dev
 ```
 
-Open http://localhost:3000 and /admin. Local admin credentials are in `LOCAL_ACCESS.md`. `.env`, this access file, databases and downloaded template packs are ignored by Git. Keep them private. Setup preserves existing data; changing ADMIN_PASSWORD does not reset an existing account.
+Open http://localhost:3000. When admin is enabled, use /admin and find credentials in `LOCAL_ACCESS.md`. `.env`, this access file, databases and downloaded template packs are ignored by Git. Keep them private. Setup preserves existing data; changing ADMIN_PASSWORD does not reset an existing account.
 
 ```
 npm run typecheck
@@ -23,3 +23,6 @@ Tests use a separate temporary SQLite database. `npm start` serves the productio
 Included: categories, products, size/color SKUs, stock, guest checkout, order access keys, protected admin CRUD, order handling and idempotent simulated payment results. Cart totals are estimates; the server validates current prices and stock. Pending orders reserve inventory until paid, failed or cancelled by an administrator. Shipping and tax are not configured. Customer membership, real payments, email, logistics and file uploads are optional integrations, not included capabilities.
 
 POST /api/orders requires Idempotency-Key (at least 16 characters). Order retrieval uses X-Order-Token. The local test callback POST /api/test-payments requires X-Test-Payment-Secret and JSON {orderId,eventId,outcome}. Never expose that secret. Customer test controls are intentionally simulated; replace them when integrating a real payment provider.
+
+
+Admin is generated only when site.config.json adminRequired is true. Without admin, there is no /admin interface, management API, administrator schema, or LOCAL_ACCESS.md. Public settings remain available in configuration/database; implement any requested operational integration separately. Other selected modules in continuation state remain pending until implemented.

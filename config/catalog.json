@@ -1,0 +1,444 @@
+{
+  "version": 4,
+  "websiteTypes": {
+    "landing": {
+      "admin": "ask",
+      "defaults": [
+        "seo"
+      ],
+      "optional": [
+        "content",
+        "inquiries",
+        "bookings",
+        "taxonomy",
+        "notifications",
+        "sms"
+      ]
+    },
+    "business": {
+      "admin": "default",
+      "defaults": [
+        "content",
+        "seo"
+      ],
+      "optional": [
+        "inquiries",
+        "bookings",
+        "taxonomy",
+        "search",
+        "notifications",
+        "files",
+        "sms"
+      ]
+    },
+    "commerce": {
+      "admin": "default",
+      "required": [
+        "commerce"
+      ],
+      "defaults": [],
+      "optional": [
+        "shipping",
+        "authentication",
+        "after-sales",
+        "notifications",
+        "search",
+        "subscriptions",
+        "entitlements",
+        "sms"
+      ]
+    },
+    "content": {
+      "admin": "default",
+      "defaults": [
+        "content",
+        "lists",
+        "seo"
+      ],
+      "optional": [
+        "authentication",
+        "payments",
+        "inquiries",
+        "taxonomy",
+        "search",
+        "files",
+        "notifications",
+        "subscriptions",
+        "entitlements",
+        "sms"
+      ]
+    },
+    "booking": {
+      "admin": "default",
+      "defaults": [
+        "bookings",
+        "content",
+        "seo"
+      ],
+      "optional": [
+        "payments",
+        "authentication",
+        "inquiries",
+        "notifications",
+        "files",
+        "after-sales",
+        "sms"
+      ]
+    },
+    "education": {
+      "admin": "default",
+      "defaults": [
+        "learning",
+        "content",
+        "seo"
+      ],
+      "optional": [
+        "bookings",
+        "authentication",
+        "payments",
+        "taxonomy",
+        "search",
+        "files",
+        "notifications",
+        "subscriptions",
+        "entitlements",
+        "after-sales",
+        "sms"
+      ]
+    },
+    "directory": {
+      "admin": "default",
+      "defaults": [
+        "directory",
+        "lists",
+        "seo"
+      ],
+      "optional": [
+        "authentication",
+        "inquiries",
+        "payments",
+        "notifications",
+        "files",
+        "sms"
+      ]
+    },
+    "dashboard": {
+      "admin": "default",
+      "defaults": [
+        "analytics",
+        "lists"
+      ],
+      "optional": [
+        "authentication",
+        "tenancy",
+        "search",
+        "files",
+        "notifications",
+        "subscriptions",
+        "entitlements",
+        "sms"
+      ]
+    },
+    "tool": {
+      "admin": "default",
+      "required": [
+        "execution"
+      ],
+      "defaults": [
+        "seo"
+      ],
+      "optional": [
+        "authentication",
+        "payments",
+        "content",
+        "analytics",
+        "files",
+        "notifications",
+        "subscriptions",
+        "entitlements",
+        "tenancy",
+        "search",
+        "sms"
+      ]
+    },
+    "community": {
+      "admin": "default",
+      "required": [
+        "community"
+      ],
+      "defaults": [
+        "seo"
+      ],
+      "optional": [
+        "media",
+        "content",
+        "payments",
+        "taxonomy",
+        "search",
+        "files",
+        "notifications",
+        "subscriptions",
+        "entitlements",
+        "tenancy",
+        "sms"
+      ]
+    },
+    "marketplace": {
+      "admin": "default",
+      "required": [
+        "marketplace"
+      ],
+      "defaults": [],
+      "optional": [
+        "bookings",
+        "shipping",
+        "analytics",
+        "after-sales",
+        "notifications",
+        "tenancy",
+        "sms"
+      ]
+    }
+  },
+  "modules": {
+    "admin": {
+      "requires": [
+        "lists",
+        "media",
+        "seo"
+      ],
+      "conflicts": [],
+      "aliases": []
+    },
+    "lists": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": []
+    },
+    "media": {
+      "requires": [
+        "lists",
+        "files",
+        "taxonomy"
+      ],
+      "conflicts": [],
+      "aliases": []
+    },
+    "content": {
+      "requires": [
+        "seo"
+      ],
+      "conflicts": [],
+      "aliases": [
+        "services",
+        "cases",
+        "articles",
+        "pages",
+        "portfolio"
+      ]
+    },
+    "seo": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": []
+    },
+    "authentication": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": [
+        "membership",
+        "accounts"
+      ]
+    },
+    "commerce": {
+      "requires": [
+        "payments",
+        "content",
+        "media",
+        "lists",
+        "taxonomy"
+      ],
+      "conflicts": [],
+      "aliases": [
+        "orders",
+        "cart"
+      ]
+    },
+    "payments": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": []
+    },
+    "shipping": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": []
+    },
+    "inquiries": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": [
+        "contact",
+        "leads"
+      ]
+    },
+    "bookings": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": [
+        "appointments",
+        "reservations"
+      ]
+    },
+    "learning": {
+      "requires": [
+        "content"
+      ],
+      "conflicts": [],
+      "aliases": [
+        "courses",
+        "enrollment"
+      ]
+    },
+    "directory": {
+      "requires": [
+        "lists",
+        "content",
+        "seo",
+        "search",
+        "taxonomy"
+      ],
+      "conflicts": [],
+      "aliases": [
+        "listings"
+      ]
+    },
+    "analytics": {
+      "requires": [
+        "lists"
+      ],
+      "conflicts": [],
+      "aliases": [
+        "metrics",
+        "reports"
+      ]
+    },
+    "execution": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": []
+    },
+    "community": {
+      "requires": [
+        "authentication",
+        "lists"
+      ],
+      "conflicts": [],
+      "aliases": []
+    },
+    "marketplace": {
+      "requires": [
+        "directory",
+        "authentication",
+        "commerce"
+      ],
+      "conflicts": [],
+      "aliases": []
+    },
+    "files": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": [
+        "attachments",
+        "file-storage"
+      ]
+    },
+    "notifications": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": []
+    },
+    "subscriptions": {
+      "requires": [
+        "entitlements"
+      ],
+      "conflicts": [],
+      "aliases": []
+    },
+    "entitlements": {
+      "requires": [],
+      "conflicts": [],
+      "aliases": []
+    },
+    "tenancy": {
+      "requires": [
+        "authentication",
+        "lists"
+      ],
+      "conflicts": [],
+      "aliases": []
+    },
+    "search": {
+      "requires": [
+        "lists"
+      ],
+      "conflicts": [],
+      "aliases": []
+    },
+    "after-sales": {
+      "requires": [
+        "lists"
+      ],
+      "conflicts": [],
+      "aliases": [
+        "refunds",
+        "returns"
+      ]
+    },
+    "taxonomy": {
+      "requires": [
+        "lists"
+      ],
+      "conflicts": [],
+      "aliases": [
+        "categories",
+        "tags"
+      ]
+    },
+    "sms": {
+      "requires": [
+        "notifications"
+      ],
+      "conflicts": [],
+      "aliases": []
+    }
+  },
+  "foundations": {
+    "standard": {
+      "assets": [
+        "core",
+        "standard"
+      ],
+      "adminAssets": [
+        "admin",
+        "admin-standard"
+      ]
+    },
+    "commerce": {
+      "assets": [
+        "core",
+        "commerce"
+      ],
+      "adminAssets": [
+        "admin",
+        "admin-commerce"
+      ],
+      "requiredBriefModules": [
+        "orders"
+      ],
+      "requiredFields": [
+        "currency"
+      ]
+    }
+  }
+}

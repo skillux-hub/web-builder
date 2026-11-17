@@ -1,5 +1,7 @@
 # Payments and channel management
 
+Use [Subscriptions](subscriptions.md) for recurring service periods, [Entitlements](entitlements.md) for actual access effects, and [After-sales](after-sales.md) for selected refund/return cases. This module retains server payment creation, provider transaction verification and callback/reconciliation rules; payment success alone does not prove subscription renewal, entitlement delivery or refund completion.
+
 Ecommerce requires payment integration: record `paymentRequired: true` with the ecommerce business rule as its source. Do not ask whether payments are needed. Use the confirmed market defaults without first asking the user to select channel switches:
 
 - China: **WeChat Pay and Alipay**.

@@ -6,6 +6,8 @@ Use for: Schools, course catalogs, cohort enrollment, online learning.
 
 Course discovery -> enrollment -> processing; lesson/material access only for actual learning delivery.
 
+Record `educationMode` as `presentation`, `enrollment`, or `learning`. Presentation covers course information and actual contact/inquiry. Enrollment adds applications, review, capacity, and cancellation. Learning adds authenticated lesson/material access and requested progress. Read [Learning](../modules/learning.md) at the selected level; course promotion does not authorize an LMS.
+
 ## Module selection
 
 learning, content, lists, seo, media; bookings for dated capacity; authentication for learner accounts when needed.
@@ -20,6 +22,6 @@ Distinguish course promotion from enrollment and learning delivery. Confirm paid
 
 ## Acceptance
 
-Publish course -> enroll -> capacity/admin update -> authorized lesson access if requested; enforce private-material restrictions.
+Apply only the selected level: presentation verifies publishing/contact; enrollment verifies submission/review/capacity; learning additionally verifies learner ownership, material access, and genuine progress persistence. Paid/free and account decisions follow that workflow.
 
 Use [Verification](../verification.md) for execution evidence and completion status.

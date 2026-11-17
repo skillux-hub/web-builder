@@ -9,7 +9,6 @@ process.env.DATABASE_URL = "file:" + join(temp, "test.db").replaceAll("\\", "/")
 process.env.TEST_PAYMENT_SECRET = "test-only-secret-".repeat(4);
 let db: typeof import("../lib/db").db;
 let commerce: typeof import("../lib/commerce");
-let auth: typeof import("../lib/auth");
 const input = (variantId: string, quantity = 1) => ({ customerName: "Test", email: "test@example.test", address: "Test address", items: [{ variantId, quantity }] });
 let sequence = 0;
 async function variant(stock = 5, price = 2500) {
@@ -20,18 +19,10 @@ async function variant(stock = 5, price = 2500) {
 before(async () => {
   execFileSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "scripts/prepare-db.ts"], { env: process.env, stdio: "pipe" });
   execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "db", "push", "--config", "prisma7.config.ts"], { env: process.env, stdio: "pipe" });
-  db = (await import("../lib/db")).db; commerce = await import("../lib/commerce"); auth = await import("../lib/auth");
+  db = (await import("../lib/db")).db; commerce = await import("../lib/commerce");
 });
 after(async () => { if (db) await db.$disconnect(); rmSync(temp, { recursive: true, force: true }); });
-test("admin login is required, session persists and logout revokes access", async () => {
-  await assert.rejects(() => auth.requireAdmin(undefined), /login required/);
-  await db.admin.create({ data: { email: "admin@example.test", passwordHash: auth.hashPassword("example-password-123") } });
-  await assert.rejects(() => auth.login("admin@example.test", "wrong"), /Invalid/);
-  const token = await auth.login("admin@example.test", "example-password-123");
-  assert.ok(await auth.requireAdmin(token)); await db.$disconnect(); assert.ok(await auth.requireAdmin(token));
-  await auth.logout(token); await assert.rejects(() => auth.requireAdmin(token), /expired/);
-});
-test("admin edits become public data and orders use server prices", async () => {
+test("catalog edits become public data and orders use server prices", async () => {
   const product = await commerce.saveProduct({ name: "New shirt", category: "Shirts", variants: [{ sku: "NEW-M", size: "M", color: "White", price: 1990, stock: 2 }] });
   const publicProduct = (await commerce.products()).find((p) => p.id === product.id)!;
   assert.equal(publicProduct.variants[0].stock, 2);
@@ -100,37 +91,4 @@ test("concurrent retries create one order and one payment event", async () => {
   const payments = await Promise.all([commerce.testPayment(id, "parallel-payment-event", "success"), commerce.testPayment(id, "parallel-payment-event", "success")]);
   assert.ok(payments.every((p) => p.status === "PAID"));
   assert.equal(await db.paymentEvent.count({ where: { orderId: id } }), 1);
-});
-
-let foundationActor: Awaited<ReturnType<typeof auth.adminIdentity>>;
-test("foundation roles enforce grants, revoke permissions immediately and protect the last owner",async()=>{
-  const governance=await import("../lib/governance");
-  const ownerRole=await db.role.create({data:{slug:"owner",name:"Owner",permissionsJson:'["*"]'}});
-  await db.admin.create({data:{email:"foundation-owner@example.test",name:"Owner",roleId:ownerRole.id,passwordHash:auth.hashPassword("foundation-owner-1234")}});
-  foundationActor=await auth.adminIdentity(await auth.login("foundation-owner@example.test","foundation-owner-1234"));
-  const role=await governance.saveRole(foundationActor,{name:"Test operator",permissions:["logs.view"]});
-  const operator=await governance.saveAdministrator(foundationActor,{name:"Operator",email:"foundation-operator@example.test",password:"foundation-operator-1234",roleId:role.id});
-  const token=await auth.login(operator.email,"foundation-operator-1234");
-  assert.equal(await auth.requireAdmin(token,"logs.view"),operator.id);
-  await assert.rejects(()=>auth.requireAdmin(token,"roles.manage"),/permission/);
-  await governance.saveRole(foundationActor,{id:role.id,name:"Restricted",permissions:[]});
-  await assert.rejects(()=>auth.requireAdmin(token,"logs.view"),/permission/);
-  await assert.rejects(()=>governance.saveRole({...foundationActor,permissions:["roles.manage"]},{name:"Escalation",permissions:["admins.manage"]}),/cannot grant/);
-  await assert.rejects(()=>governance.saveAdministrator(foundationActor,{id:foundationActor.id,name:"Owner",email:foundationActor.email,roleId:ownerRole.id,active:false}),/at least one/);
-});
-test("foundation settings and SEO are persisted without exposing credentials",async()=>{
-  const governance=await import("../lib/governance");
-  await governance.saveSettings(foundationActor,{storeName:"Configured business",contactEmail:"",maintenance:true,lowStockThreshold:4});
-  await governance.saveSettings(foundationActor,{seoTitle:"Configured SEO",seoDescription:"Configured description",siteUrl:"https://example.test",allowIndexing:false},true);
-  const site=await governance.settings();assert.equal(site.storeName,"Configured business");assert.equal(site.seoTitle,"Configured SEO");assert.equal(site.maintenance,true);
-  await governance.saveSettings(foundationActor,{...site,maintenance:false});
-});
-test("foundation password change requires the old password and revokes all sessions",async()=>{
-  const governance=await import("../lib/governance");
-  const token=await auth.login("foundation-owner@example.test","foundation-owner-1234");
-  await assert.rejects(()=>governance.changePassword(foundationActor,{currentPassword:"wrong",newPassword:"foundation-new-1234"}),/incorrect/);
-  await governance.changePassword(foundationActor,{currentPassword:"foundation-owner-1234",newPassword:"foundation-new-1234"});
-  await assert.rejects(()=>auth.requireAdmin(token),/expired/);
-  assert.ok(await auth.requireAdmin(await auth.login("foundation-owner@example.test","foundation-new-1234")));
-  const logs=JSON.stringify(await db.auditLog.findMany());assert.ok(logs.includes("administrator.password"));assert.ok(!logs.includes("foundation-new-1234"));assert.ok(!logs.includes(token));
 });

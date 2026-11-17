@@ -1,8 +1,8 @@
-import { settings } from "./governance";
+import { settings } from "./settings";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { db } from "./db";
-import { digest } from "./auth";
+import { digest } from "./digest";
 import { BusinessError, integer, text } from "./errors";
 import config from "../site.config.json";
 

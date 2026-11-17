@@ -6,6 +6,8 @@ Model categories, products, images, variants/SKUs, minor-unit prices, stock, car
 
 For admin-enabled stores, provide category/product/SKU maintenance, low-stock alerts, order state handling, shipment records when applicable, member status when membership is selected, and product SEO. Extend business permissions and logs for these operations; an admin menu alone is insufficient.
 
+Category/tag rules follow [Taxonomy](taxonomy.md). Select [Search](search.md) for search/index behavior and [After-sales](after-sales.md) for agreed returns/refunds/exchanges; pending-order cancellation alone does not provide after-sales. Recurring goods/services use [Subscriptions](subscriptions.md), digital access uses [Entitlements](entitlements.md), and requested order notices use [Notifications](notifications.md).
+
 The server calculates prices/totals and reserves stock transactionally. Cart inputs contain SKU and quantity, not trusted prices. Repeated order submissions use persistent idempotency keys; conflicting payloads fail. Cancellation restores reserved stock exactly once. Verify last-unit concurrency and ownership, not just browsing.
 
 Read [Payments](payments.md) for ecommerce defaults. Read [Shipping](shipping.md) only for physical fulfillment; digital goods need an authorized delivery workflow instead. Use [Content](content.md), [Media](media.md), [Lists](lists.md), and [SEO](seo.md) as applicable.

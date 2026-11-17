@@ -23,6 +23,9 @@ Classify by primary customer workflow using [Website types](references/website-t
 | [Education](references/website-types/education.md) | Courses, enrollment, learning delivery |
 | [Directory](references/website-types/directory.md) | Searchable listings and publisher submissions |
 | [Dashboard](references/website-types/dashboard.md) | Data consoles, SaaS workspaces, internal tools |
+| [Tool](references/website-types/tool.md) | Calculators, AI tools, conversion and execution workflows |
+| [Community](references/website-types/community.md) | Forums, questions/answers and member-generated discussions |
+| [Marketplace](references/website-types/marketplace.md) | Independent sellers/providers transacting through a platform |
 
 Read one primary type; add a secondary type only for a requested hybrid workflow. Industry and template appearance do not determine type. Record `websiteType` and optional `additionalWebsiteTypes` in the brief without changing existing module IDs. Unlisted domains can compose the nearest applicable workflows.
 
@@ -32,11 +35,16 @@ Determine admin need before admin selection: ask for single-page sites unless al
 
 Use [Functional modules](references/modules.md) to select and load only relevant rules. Each module owns its data, actions, states, dependencies, and acceptance:
 
-- Shared capabilities: admin governance, lists/bulk operations, media/branding, content/rich text, SEO, customer/workspace authentication.
-- Business capabilities: commerce, inquiries, bookings, learning, directories, analytics.
-- Integrations: payments and shipping, only for workflows that need them.
+- Shared capabilities: admin governance, lists/bulk operations, media/branding, files/storage, content/rich text, taxonomy, search, SEO, customer/workspace authentication and organization tenancy.
+- Business capabilities: commerce, inquiries, bookings, learning, directories, analytics, tool execution, community moderation, multi-seller marketplaces.
+- Service lifecycle: notifications, subscriptions, access entitlements and after-sales, only for selected workflows. Paid subscriptions use payments when confirmed; identity, subscription periods and actual access have separate responsibilities.
+- Integrations: payments, shipping and SMS, only for workflows that need them. SMS reuses notification orchestration; verification challenges and login remain in authentication.
 
-Record selection sources and meaningful dependencies. Website types suggest scope; they do not implement features. Ecommerce requires [Payments](references/modules/payments.md) without asking again whether payments are needed. Establish payment need for other businesses. [Shipping](references/modules/shipping.md) follows actual origin/destination and fulfillment needs. Template widgets do not authorize either module. Admin-only login does not require customer accounts.
+For SMS selection, use [Country-based SDK recommendations](references/sms-providers.md) to suggest two or three providers from the user's/merchant's known country and actual recipient destinations, preserving existing provider choices.
+
+For shipping selection, use [Country-and-route SDK/API recommendations](references/shipping-providers.md). Start from the user's/merchant's known country, then qualify warehouse origin -> destination and required fulfillment capabilities. Distinguish official SDKs from official REST adapters and preserve established provider choices.
+
+Use [Executable composition](references/composition.md) and `scripts/composition.py --brief <brief.json>` to preview resolved scope. [config/catalog.json](config/catalog.json) owns presets, dependencies, exclusions, and asset layers. Record selection sources; planned modules are not implemented features. Ecommerce requires [Payments](references/modules/payments.md) without asking again whether payments are needed. Establish payment need for other businesses. [Shipping](references/modules/shipping.md) follows actual origin/destination and fulfillment needs. Template widgets do not authorize either module. Admin-only login does not require customer accounts.
 
 ## 3. Select designs and acquire templates
 
@@ -60,7 +68,7 @@ python "<skill>/scripts/skillux.py" fetch <frontend-slug> --role frontend --proj
 python "<skill>/scripts/skillux.py" fetch <admin-slug> --role admin --project "<project>"
 ```
 
-Skip admin downloads when not needed. The foundation currently includes admin scaffolding; remove unused admin routes/services for an admin-free project. Read template instructions/generators and migrate real pages/assets; an iframe or brand replacement is insufficient. Protect shared backend code, credentials, and existing work.
+Skip admin downloads when not needed. Set `adminRequired: false` before generation to omit admin assets, routes, models, and credentials. Single-page generation requires an explicit admin decision. Existing projects are not automatically migrated. Read template instructions/generators and migrate real pages/assets; an iframe or brand replacement is insufficient. Protect shared backend code, credentials, and existing work.
 
 For each selected module, connect frontend -> server validation -> persisted data -> admin/operational workflow when applicable. Keep `/`, `/admin`, and `/admin/login` layouts and customer/admin sessions independent. Load the module rules while implementing its surfaces: real pagination for lists, shared image uploads/pickers with proper request limits, rich text with safe rendering, derived page SEO, and working admin governance. Do not create unrequested commerce features in other types.
 

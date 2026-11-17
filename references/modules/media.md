@@ -1,5 +1,7 @@
 # Media library, uploads, and branding
 
+Reuse [Files](files.md) for storage lifecycle/access and [Taxonomy](taxonomy.md) for image categories/tags. This module retains image validation/re-encoding, previews, pickers, alt text, logo and favicon behavior; private documents or tool results do not become public library images.
+
 Load for image upload/picking or an admin-enabled site. Image fields share one library.
 
 ## Upload limits

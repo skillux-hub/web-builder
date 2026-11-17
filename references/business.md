@@ -14,7 +14,11 @@ Read [Payments](modules/payments.md) only for ecommerce or a noncommerce payment
 
 Read [Shipping](modules/shipping.md#shipping-service-selection) only when fulfillment is needed. Establish actual origin/destination; conversation language alone does not establish a route. Reuse existing route/provider choices. The module owns route defaults, labels, tracking, and manual operations.
 
+Use [Country-and-route shipping SDK/API recommendations](shipping-providers.md) to present two or three suitable candidates from the user's/merchant's country and actual warehouse routes. A home country does not determine ship-from coverage; existing selected providers and carrier contracts take precedence. Reuse known countries and qualify the required product/account before choosing a route.
+
 ## Defaults
+
+When SMS is selected, follow [Country-based SMS SDK recommendations](sms-providers.md). Reuse the user's/merchant's known country and actual recipient destinations to suggest two or three relevant providers and official SDKs. Do not infer nationality, merchant location or SMS routes from the conversation language. Skip provider selection when an established choice is already suitable.
 
 Use explicit region/country names. Website language is independent of conversation language and market. Nontransactional projects need no currency/shipping questionnaire. Transactions require a confirmed currency; record shipping-cost rules when applicable. Follow [Authentication](modules/authentication.md) when customer accounts or a private workspace are required; admin login alone does not imply customer membership.
 

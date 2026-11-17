@@ -1,0 +1,50 @@
+# Shipping provider and SDK recommendations by country and route
+
+Read when shipping is selected and a provider choice is needed. These are practical candidate shortlists, not measured popularity, cost or service-quality rankings. Official documentation was checked on 2026-11-17; recheck current account eligibility, origin/destination coverage, carrier services, API family, SDK/runtime compatibility and pricing during integration.
+
+## Select from country and actual route
+
+Reuse the user's stated country, merchant/operating entity country, warehouse/origin countries, destination countries and existing carrier/provider contracts. Do not infer them from conversation language, website locale, timezone or IP. Ask only for missing facts that affect selection. A user's home country starts the discussion; the actual warehouse/origin -> destination route determines fulfillment eligibility.
+
+Preserve explicit provider choices and working integrations. For each route, recommend two or three candidates from the applicable shortlist and explain why they fit the actual origin, destination, required capabilities and account. A merchant in mainland China dispatching US warehouse orders within the US needs a US-origin route; a European merchant dispatching from mainland China needs a China-origin/cross-border route. Do not choose a domestic integration merely from the user's language or residence.
+
+For multi-warehouse/multi-country businesses, record route/provider mappings separately. Do not automatically migrate providers, register accounts, purchase postage/labels or change historical shipments. If the user authorized technical selection, select a verified suitable candidate; otherwise resolve a meaningful provider/account choice from concrete options without repeatedly asking known questions.
+
+## Initial shortlists
+
+| User/merchant country and actual origin scenario | Initial candidates | Qualification before recommendation |
+| --- | --- | --- |
+| Mainland China domestic fulfillment, origin and destination in mainland China | Kuaidi100; Kdniao | Check carrier account/contract, electronic label/print-data capability, tracking and permitted origin. A track-only subscription does not fulfill the label requirement. |
+| Mainland-China-origin cross-border fulfillment | Easyship; Shippo; AfterShip Shipping | Verify the actual origin account, carrier/service and destination before recommending a candidate as usable. AfterShip Shipping means the label/fulfillment product, not Tracking alone. An existing contracted cross-border carrier/forwarder can take precedence. |
+| United States or Canada, including local warehouse dispatch | Shippo; ShipStation API; EasyPost | Filter by actual US/Canadian origin, destination and carrier account. A carrier listed by the platform does not prove every origin/account/service combination is available. |
+| United Kingdom and European origin countries | Sendcloud; ShipStation API; Shippo | Verify supported sender/origin countries, local carrier contracts, service-point/label/customs capabilities when needed, and the destination. Do not assume every European country is supported. |
+| Australia or New Zealand origin | Starshipit; Easyship; Shippo | Check actual origin/courier configuration, labels, tracking-number return and international destinations separately. Local carrier activation may be required. |
+| India origin | Shiprocket; Easyship; Shippo | Start by evaluating Shiprocket for an Indian-origin workflow. Treat international alternatives as provisional until merchant/origin coverage and the actual courier route are verified. |
+| Singapore, Hong Kong or another international hub; other or mixed countries | Easyship; Shippo; AfterShip Shipping | Treat these as provisional international candidates, then verify origin, destination, merchant eligibility and actual product capabilities. Retain an existing appropriate local carrier contract. |
+
+If fewer candidates can be verified for a route, disclose that rather than inventing coverage or SDKs. Do not claim cheapest prices, market shares or delivery guarantees without current evidence. A shortlist is not proof that a service can book or issue labels for the merchant.
+
+## Official SDK/API entry points
+
+For the default Node.js backend, use an official SDK where verified; otherwise implement a server-side adapter to the official HTTP API. An official Node example is not automatically a maintained npm SDK. Do not invent package names or install every candidate. Existing stacks can use the provider's current official SDK for their language without changing the application architecture.
+
+| Provider/product | Verified integration entry point | Capability/version boundary |
+| --- | --- | --- |
+| Kuaidi100 | [Official API platform](https://api.kuaidi100.com/) and [official Node.js examples](https://github.com/kuaidi100-api/nodejs-demo) | Query/subscription, labels/printing and shipping products are separate capabilities. Verify the required product/account; do not invent an official npm package from the example repository name. |
+| Kdniao | [Official electronic-label product](https://www.kdniao.com/product-service/98) and the current API documentation available from [its platform](https://www.kdniao.com/) | Use the official HTTP API/current samples for the chosen product. No official Node package was verified in this review; do not treat an arbitrary third-party wrapper as official. |
+| Shippo | Official npm `shippo`; [provider-owned JavaScript SDK](https://github.com/goshippo/shippo-javascript-sdk) | Check runtime/API compatibility and pin a tested SDK version. Provider carrier listings do not establish an eligible ship-from route or account. |
+| ShipStation API | Official npm `@shipstation/shipstation-js-sdk`; [current SDK guide](https://docs.shipstation.com/sdks) and [repository](https://github.com/shipstation/shipstation-js-sdk) | Confirm the selected API family/version, credentials, SDK engines and product entitlement. ShipStation API, the former ShipEngine API, and ShipStation Companion/platform APIs must not have examples or keys mixed together. A brand rename does not authorize migrating an existing integration. |
+| EasyPost | Official npm `@easypost/api`; [provider-owned Node client](https://github.com/EasyPost/easypost-node) | Backend use only. Shipment creation, label purchase, tracking and refunds are distinct operations; examples that buy labels must not be executed against live accounts during default verification. |
+| Easyship | [Official shipment/label flow](https://developers.easyship.com/docs/overview-flow-guide) and [webhook guide](https://developers.easyship.com/reference/webhooks-guide) | Use a server-side REST adapter or a currently verified official SDK. Shipment creation can optionally purchase a label; inspect flags and account environment. Asynchronous acceptance does not prove label readiness. |
+| AfterShip Shipping | [Official Shipping API quickstart](https://www.aftership.com/docs/shipping/quickstart/api-quick-start) | Use Shipping APIs for rates/labels/manifests/pickups with actual account eligibility. AfterShip Tracking or its SDK alone does not provide shipment/label creation. Verify any chosen SDK against this product; use official REST if no matching official SDK is established. |
+| Sendcloud | [Official developer quickstart](https://sendcloud.dev/docs/getting-started) | Follow the selected current API version for shipments, labels, shipping options, carrier contracts, tracking and international flows. Use an official REST adapter unless a matching maintained official SDK is verified; do not copy an old parcel example into a different API version. |
+| Starshipit | [Official developer center](https://support.starshipit.com/developers) and [API reference](https://api-docs.starshipit.com/) | Official REST workflows cover order import, label printing and tracking-number writeback. Account keys and courier configuration are separate prerequisites. A tracking-only order is not label fulfillment. |
+| Shiprocket | [Official API documentation](https://apidocs.shiprocket.in/?version=latest) | Use official REST flows for order/shipment, courier serviceability, AWB, labels/manifests, pickup and tracking as selected. Order/shipment IDs, AWB assignment and label availability are separate facts; check automatic pickup/label flags in combined operations. |
+
+## Capability checks and continuation
+
+For every candidate, record the actual provider product and whether order/shipment submission, electronic labels/print data, tracking-number return, tracking callbacks/query and manual correction are supported, configured and verified. Track optional quotes, returns, pickups and customs documents only when requested. A tracking API, shipping-rate widget or dashboard integration cannot substitute for the fulfillment capabilities required under [Shipping](modules/shipping.md).
+
+Keep merchant/user country and its source, warehouses/origins, destinations, route IDs, carrier contracts, candidates/official references, selected provider/product/API/SDK, selection source and outstanding checks in nonsensitive continuation state. Never store provider credentials there. Record proposed defaults separately from confirmed user choices and configured routes.
+
+Domestic mainland-China aggregator integrations retain electronic labels, tracking-number/print-data return and printing. China cross-border and other-market routes retain shipment submission and tracking-number return. Every route retains manual carrier/number entry/editing and tracking, with explicit dispatch confirmation. Missing eligible accounts or credentials remain pending, without fake numbers, labels or events. Verify with isolated local data/provider sandboxes without buying live postage or requesting actual pickups by default.

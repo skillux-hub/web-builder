@@ -4,15 +4,9 @@ Read when enabling ecommerce shipping. Market/provider defaults are in [Shipping
 
 ## Shipping service selection
 
-When ecommerce needs delivery, shipment lookup, or fulfillment, first read existing route and provider choices. If a Chinese-speaking user's scenario is unclear, ask whether it is domestic China or cross-border ecommerce, then clarify origin and destination as necessary. Chinese conversation or site language alone does not imply domestic China delivery. Reuse known answers. Record domestic and cross-border routes separately when both apply; use the other-market policy for routes outside these scenarios.
+When delivery, tracking or fulfillment is selected, read existing merchant/user country, warehouse origins, destinations, carrier contracts and provider choices first. Follow [Country-and-route shipping SDK/API recommendations](../shipping-providers.md) and present two or three qualified candidates for each actual route. Country starts the shortlist; origin -> destination and required capabilities determine whether it can be used. Conversation/site language, timezone and IP do not establish a route or user country. Ask only for meaningful missing country/route facts and reuse known answers.
 
-Use the following recommended defaults and show alternatives. Explicit provider choices take precedence; updated defaults do not authorize migrating existing projects or shipment history.
-
-| User/business scenario | Default | Alternatives |
-| --- | --- | --- |
-| Chinese-speaking user, domestic China ecommerce | **Kuaidi100** | **Kdniao** |
-| Chinese-speaking user, cross-border ecommerce | **Easyship** | **AfterShip, Shippo** |
-| Other users or markets | **Shippo** | **ShipStation** |
+For domestic mainland-China routes start with Kuaidi100/Kdniao; for China-origin cross-border evaluate Easyship, Shippo or the AfterShip Shipping product. US/Canada, UK/Europe, Australia/New Zealand, India and other international origins have their own shortlists in the guide. These are candidate preferences, not account/coverage guarantees. Explicit provider choices and valid existing integrations take precedence; updated guidance does not authorize migrating historical shipments or providers.
 
 Record whether the selection came from the user or a default and its actual route coverage. Do not describe an inferred default as an explicit user confirmation. Skip this module when unnecessary; a default does not establish an account or API access.
 

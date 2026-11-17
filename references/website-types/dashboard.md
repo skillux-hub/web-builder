@@ -2,6 +2,8 @@
 
 Use for: Data/reporting consoles, customer portals, operational workspaces.
 
+Use [Tool](tool.md) for input -> computation/conversion -> result as the primary action. A tool can use dashboard as a secondary history/operations surface.
+
 ## Scope and workflow
 
 Authenticate when needed -> scoped data -> filters/charts/details -> authorized business action.

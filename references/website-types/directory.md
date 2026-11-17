@@ -2,6 +2,8 @@
 
 Use for: Property, jobs, service directories, listing marketplaces.
 
+This type covers discovery/contact. Use [Marketplace](marketplace.md) when the platform processes transactions for independent sellers/providers, including seller-scoped orders and settlements.
+
 ## Scope and workflow
 
 Categories/filter/search -> listing detail -> contact/submission/moderation as required.

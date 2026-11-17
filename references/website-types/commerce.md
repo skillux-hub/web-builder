@@ -1,6 +1,6 @@
 # Ecommerce and online stores
 
-Use for: Retail, physical/digital goods, direct online ordering.
+Use for: Retail, physical/digital goods, direct online ordering. For transactions involving independent sellers and platform commissions/settlement, use [Marketplace](marketplace.md).
 
 ## Scope and workflow
 

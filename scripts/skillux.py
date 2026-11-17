@@ -193,6 +193,8 @@ def fetch_pack(slug, role, project):
     state = parse_json(state_path.read_bytes())
     if state.get("schemaVersion") != 1:
         raise SkilluxError("Unsupported project state version")
+    if role == "admin" and (state.get("composition", {}).get("adminRequired") is False or state.get("brief", {}).get("adminRequired") is False):
+        raise SkilluxError("Admin is disabled for this project; preserve the choice and skip admin downloads")
     parent = project / ".web-builder" / "templates" / role
     destination = parent / slug
     if not destination.resolve().is_relative_to(project / ".web-builder"):

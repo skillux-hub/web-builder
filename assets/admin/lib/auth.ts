@@ -1,9 +1,10 @@
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db";
 import { BusinessError, text } from "./errors";
 import { allowed, permissionList, type Permission } from "./permissions";
 
-export const digest = (value: string) => createHash("sha256").update(value).digest("hex");
+import { digest } from "./digest";
+export { digest } from "./digest";
 export function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;

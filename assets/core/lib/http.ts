@@ -1,7 +1,4 @@
-import { cookies } from "next/headers";
 import { BusinessError } from "./errors";
-export const sessionCookie = "web_builder_admin";
-export async function sessionToken() { return (await cookies()).get(sessionCookie)?.value; }
 export function checkOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin) throw new BusinessError("Cross-origin write rejected", 403);

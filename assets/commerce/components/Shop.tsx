@@ -55,7 +55,7 @@ export function Shop({ mode = "catalog", productId }: { mode?: "catalog" | "cart
     try { const result = await api(`orders/${encodeURIComponent(id)}`, { headers: { "x-order-token": token } }); setReceipt({ order: result.order, accessToken: token }); }
     catch (e) { setError((e as Error).message); }
   }
-  return <div className="storefront"><header><a href="/"><strong>{config.brand}</strong></a><nav><a href="/">{tr("商品", "Shop")}</a><a href="/cart">{tr("购物车", "Cart")} ({Object.values(cart).reduce((a, b) => a + b, 0)})</a><a href="/orders">{tr("订单查询", "Track order")}</a><a href="/admin">{tr("管理后台", "Admin")}</a></nav></header><main>
+  return <div className="storefront"><header><a href="/"><strong>{config.brand}</strong></a><nav><a href="/">{tr("商品", "Shop")}</a><a href="/cart">{tr("购物车", "Cart")} ({Object.values(cart).reduce((a, b) => a + b, 0)})</a><a href="/orders">{tr("订单查询", "Track order")}</a>{config.adminRequired && <a href="/admin">{tr("管理后台", "Admin")}</a>}</nav></header><main>
     <p className="notice">{tr("本地测试商城 · 支付为模拟测试，不会实际扣款。", "Local test store · Payments are simulated; no money is charged.")}</p>
     {error && <p role="alert" className="error">{error}</p>}{message && <p role="status" className="success">{message}</p>}
     {mode === "catalog" && <><div className="hero"><small>{config.brand}</small><h1>{tr("找到适合你的那一件", "Find your next favorite")}</h1><p>{tr("查看款式、颜色与尺码，选择你的日常所爱。", "Explore styles, colors and sizes for every day.")}</p></div>

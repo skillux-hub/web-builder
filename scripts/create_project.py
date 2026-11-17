@@ -5,9 +5,19 @@ import json
 from pathlib import Path
 import secrets
 import shutil
+import importlib.util
+
+
+def composition(brief, foundation):
+    spec = importlib.util.spec_from_file_location("web_builder_composition", Path(__file__).with_name("composition.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.resolve(brief, foundation)
 
 
 def create(output, brief, foundation="standard"):
+    if not isinstance(brief, dict):
+        raise ValueError("brief must be a JSON object")
     for field in ("brand", "business", "locale"):
         if not isinstance(brief.get(field), str) or not brief[field].strip():
             raise ValueError(f"Missing brief field: {field}")
@@ -21,23 +31,38 @@ def create(output, brief, foundation="standard"):
         raise ValueError("Output must be outside the skill")
     if output.exists() and (not output.is_dir() or any(output.iterdir())):
         raise ValueError("Output is not empty; existing content was preserved")
-    if foundation not in ("standard", "commerce"):
-        raise ValueError("Unknown foundation")
-    if foundation == "commerce" and "orders" not in brief["modules"]:
-        raise ValueError("Commerce foundation requires an explicitly requested orders module")
-    if foundation == "commerce" and "currency" not in brief:
-        raise ValueError("Commerce foundation requires the customer's currency")
-    shutil.copytree(skill / "assets" / "core", output, dirs_exist_ok=True)
-    shutil.copytree(skill / "assets" / foundation, output, dirs_exist_ok=True)
-    password = secrets.token_urlsafe(18)
+    plan = composition(brief, foundation)
+    admin_required = plan["adminRequired"]
+    for layer in plan["assetLayers"]:
+        shutil.copytree(skill / "assets" / layer, output, dirs_exist_ok=True)
+    if admin_required:
+        schema = output / "prisma/schema.prisma"
+        schema.write_text(schema.read_text(encoding="utf-8") + "\n" + (skill / "assets/admin/schema.prisma.inc").read_text(encoding="utf-8"), encoding="utf-8")
+        (output / "schema.prisma.inc").unlink()
+    seed_imports = ['import { db } from "../lib/db";']
+    seed_calls = []
+    if admin_required:
+        seed_imports.append('import { seedAdmin } from "../lib/seed-admin";')
+        seed_calls.append("await seedAdmin();")
+    if foundation == "commerce":
+        seed_imports.append('import { seedCatalog } from "../lib/seed-catalog";')
+        seed_calls.append("await seedCatalog();")
+    (output / "prisma/seed.ts").write_text("\n".join(seed_imports) + "\nasync function seed() {\n" + "\n".join(seed_calls) + '\n}\nseed().finally(() => db.$disconnect());\n', encoding="utf-8")
     payment_env = f'TEST_PAYMENT_SECRET="{secrets.token_hex(32)}"\n' if foundation == "commerce" else ""
+    password = secrets.token_urlsafe(18) if admin_required else None
+    admin_env = f'ADMIN_EMAIL="admin@local.test"\nADMIN_PASSWORD="{password}"\n' if admin_required else ""
     (output / ".env").write_text(
-        'DATABASE_URL="file:./prisma/dev.db"\nADMIN_EMAIL="admin@local.test"\n'
-        f'ADMIN_PASSWORD="{password}"\n' + payment_env, encoding="utf-8")
-    (output / "LOCAL_ACCESS.md").write_text(
-        "# Local test access\n\nEmail: admin@local.test\n\nPassword: " + password +
-        "\n\nThese are local test credentials. Do not publish this file or .env.\n", encoding="utf-8")
-    config = {"brand": brief["brand"], "locale": brief["locale"], "modules": brief["modules"]}
+        'DATABASE_URL="file:./prisma/dev.db"\n' + admin_env + payment_env, encoding="utf-8")
+    (output / ".env.example").write_text(
+        'DATABASE_URL="file:./prisma/dev.db"\n' + ('ADMIN_EMAIL="admin@local.test"\nADMIN_PASSWORD=""\n' if admin_required else "") +
+        ('TEST_PAYMENT_SECRET=""\n' if foundation == "commerce" else ""), encoding="utf-8")
+    if admin_required:
+        (output / "LOCAL_ACCESS.md").write_text(
+            "# Local test access\n\nEmail: admin@local.test\n\nPassword: " + password +
+            "\n\nThese are local test credentials. Do not publish this file or .env.\n", encoding="utf-8")
+    config = {"brand": brief["brand"], "locale": brief["locale"], "modules": brief["modules"], "adminRequired": admin_required}
+    if "websiteType" in brief:
+        config["websiteType"] = brief["websiteType"]
     if "region" in brief:
         config["region"] = brief["region"]
     if "currency" in brief:
@@ -47,8 +72,9 @@ def create(output, brief, foundation="standard"):
     state_dir.mkdir()
     state = {"schemaVersion": 1, "brief": brief, "foundation": foundation, "templates": {},
              "templateIntegration": "pending", "businessImplementation": "pending",
+             "composition": plan,
              "adminArchitecture": {"entry": "/admin", "login": "/admin/login", "separateLayout": True,
-                                   "coreModules": ["roles", "permissions", "administrators", "audit", "settings", "seo", "password"]}, "checks": {}}
+                                   "coreModules": ["roles", "permissions", "administrators", "audit", "settings", "seo", "password"]} if admin_required else None, "checks": {}}
     (state_dir / "project.json").write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return output
 

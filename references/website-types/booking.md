@@ -6,6 +6,8 @@ Use for: Healthcare/repair appointments, restaurant/travel reservations, event r
 
 Service/resource -> availability -> reservation -> confirmation -> processing -> cancel/reschedule.
 
+Record `bookingModel` in the brief: `slots` for appointments with start/duration/resource conflicts; `date-range` for arrival/departure or rental intervals with inventory across every included day; `capacity` for events/sessions with finite places. Read [Bookings](../modules/bookings.md) for model-specific rules. Template calendars do not determine the model.
+
 ## Module selection
 
 bookings, content, lists, seo; media when images are used; inquiries if inquiry-only conversion is selected.
@@ -21,5 +23,7 @@ Confirm booking versus inquiry-only intent and payment need. No mandatory store 
 ## Acceptance
 
 Concurrent bookings cannot exceed capacity; admin changes availability; confirmation/cancellation persist and display in the correct timezone.
+
+For slots test overlap/duration boundaries; for date ranges test adjacent/overlapping stays and daily inventory; for capacity test concurrent last-place requests. Inquiry-only forms require inquiries without claiming reserved availability.
 
 Use [Verification](../verification.md) for execution evidence and completion status.
