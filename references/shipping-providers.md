@@ -4,7 +4,7 @@ Read when shipping is selected and a provider choice is needed. These are practi
 
 ## Select from country and actual route
 
-Reuse the user's stated country, merchant/operating entity country, warehouse/origin countries, destination countries and existing carrier/provider contracts. Do not infer them from conversation language, website locale, timezone or IP. Ask only for missing facts that affect selection. A user's home country starts the discussion; the actual warehouse/origin -> destination route determines fulfillment eligibility.
+Reuse the target market collected during initial requirements as the default destination, along with known merchant/operating entity country, warehouse/origin countries, explicit additional destinations and existing carrier/provider contracts. Do not ask the user to repeat the store's market or pricing currency during shipping intake. Ask only for missing facts that affect selection: notably warehouse/origin when unknown, or additional destinations when cross-border/broader coverage is indicated. Do not infer countries from conversation language, website locale, timezone or IP. The actual warehouse/origin -> destination route determines fulfillment eligibility.
 
 Preserve explicit provider choices and working integrations. For each route, recommend two or three candidates from the applicable shortlist and explain why they fit the actual origin, destination, required capabilities and account. A merchant in mainland China dispatching US warehouse orders within the US needs a US-origin route; a European merchant dispatching from mainland China needs a China-origin/cross-border route. Do not choose a domestic integration merely from the user's language or residence.
 

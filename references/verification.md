@@ -35,6 +35,23 @@ Test admin-switch authorization, persistence, and frontend reflection. Disabled/
 
 ### Admin, business, and commerce
 
+#### Authenticated admin acceptance gate
+
+For category-capable workflows, apply [classification implementation and hierarchy acceptance](modules/taxonomy.md#acceptance). Check the dedicated module against the recorded scope, including actual category operations and business associations. For hierarchical categories inspect populated parent/child/grandchild and sibling branches, named parent/path pickers, expansion, moves/order after refresh, and polished desktop/mobile layout. A flat display that conceals hierarchy or a category text field alone fails module acceptance.
+
+Before checking pages, compare the recorded modules with actual admin entries and persisted workflows. When taxonomy is selected, require independent category/tag management and content association where applicable; a free-text category field alone is partial implementation. Verify creation, association, rename, disabled visibility, referenced deletion rejection and hierarchy cycles when hierarchy exists.
+
+Apply this gate to every admin-enabled project, including template migrations and resumed projects:
+
+1. In isolated local data, verify login -> workbench -> refresh -> logout -> rejected access. Use a temporary least-privilege account to verify both permitted actions and server-side 403 responses; an empty permission set must not crash the shell.
+2. Inspect the actual session response contract. Keep account grants (a string array) separate from the permission-label dictionary. Validate the client boundary and add a regression test if a contract mismatch caused a failure; testing only a shared permission helper does not prove the HTTP contract.
+3. Open every implemented management tab or route. Wait for its data-dependent content or explicit empty state after requests finish, inspect relevant browser/server errors, and verify expected records or counts. A heading rendered before an API request completes is not a pass.
+4. Exercise representative key mutations for each selected module, then refresh/reopen and compare persisted values. For commerce include product/SKU save and storefront reflection; verify order/dispatch actions using isolated paid-order fixtures when payment credentials are absent. Verify governance/settings/SEO flows in temporary accounts/data. Verify uploads/pickers when selected. Do not change the user's credentials or existing business data to run checks.
+5. Check the signed-in shell at desktop and narrow widths, including navigation and key forms. Capture evidence of the actual working backend. Fix observed runtime exceptions and repeat the failing path plus affected adjacent paths before delivery.
+6. Record per-area results in `checks.admin`: execution method, expected/observed result, persistence and authorization evidence, cleanup, and any unexecuted/blocked paths. Distinguish page-loading checks from mutation checks and real provider sandbox checks. Mark overall admin acceptance partial until required paths pass; missing external credentials do not waive independent local admin checks.
+
+For a backend error report, reproduce the original failing route and capture its error before editing; after fixing, reload that route with a valid session, check related tabs, and run focused regression tests plus appropriate existing checks. Do not substitute unrelated build success for reproducing and resolving the reported failure.
+
 All projects require relevant authorization, persistence, and actual business checks. Admin rules apply when admin is enabled; commerce checks apply only to selected modules. For conditional generation, validate standard/commerce with and without admin: setup, typecheck, tests, build, public settings/commerce persistence, omitted administrator artifacts, and actual 404 responses for disabled management routes. Exercise enabled admin login/authorization separately.
 
 - Separate `/admin/login` exists; unauthenticated `/admin` redirects and unauthorized admin APIs return 401/403. Frontend/admin navigation, footer, and providers do not leak across shells. Customer sessions do not grant admin rights. Logout/expiry removes access to workbench data.

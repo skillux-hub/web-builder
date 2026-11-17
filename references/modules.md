@@ -12,7 +12,7 @@ Choose modules from confirmed workflows and the [website type](website-types.md)
 | `authentication` | [Customer/workspace accounts](modules/authentication.md) | Registration, membership, login, private workspace | Market defaults; customer/admin session separation. Admin-only password login uses the optional admin asset layer. |
 | `commerce` | [Catalog, stock, cart, orders](modules/commerce.md) | Explicit selling/ordering | Server-authoritative totals and stock; payments; shipping for shipped goods. |
 | `payments` | [Payment channels](modules/payments.md) | Required for ecommerce; confirmed need elsewhere | Independent channel switches, valid configuration, server payment/notification state. |
-| `shipping` | [Shipping fulfillment](modules/shipping.md) | Shipped goods or requested shipment workflows | Actual route/provider, submission/labels, manual edits, dispatch, tracking. |
+| `shipping` | [Shipping fulfillment](modules/shipping.md) | Shipped goods or requested shipment workflows | Country-aware address/postal-code library; admin-managed delivery methods/descriptions/estimated times/fees and checkout selection; actual route/provider, submission/labels, manual edits, dispatch, tracking. |
 | `inquiries` | [Inquiries and leads](modules/inquiries.md) | Forms, contact, quote/demo requests | Persisted submission and actual handling/delivery destination. |
 | `bookings` | [Bookings and capacity](modules/bookings.md) | Appointments, reservations, scheduled registration | Availability, concurrency, timezone, cancel/reschedule; payment only when needed. |
 | `learning` | [Courses and enrollment](modules/learning.md) | Education workflow | Courses/cohorts/enrollment; protected lessons only when learning delivery selected. |

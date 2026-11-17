@@ -35,6 +35,8 @@ Determine admin need before admin selection: ask for single-page sites unless al
 
 ## 2. Compose functional modules
 
+When the selected scope includes categories/classification (`taxonomy`), implement the [classification module](references/modules/taxonomy.md) as a working management workflow with persisted business associations. Include a dedicated admin entry when admin is enabled. Hierarchical categories require a clear, polished interactive tree with expand/collapse, contextual add-child actions and named ancestor paths in pickers; a category text field, flat list hiding parent relationships, or menu placeholder does not complete this module.
+
 Use [Functional modules](references/modules.md) to select and load only relevant rules. Each module owns its data, actions, states, dependencies, and acceptance:
 
 - Shared capabilities: admin governance, lists/bulk operations, media/branding, files/storage, content/rich text, taxonomy, search, SEO, customer/workspace authentication and organization tenancy.
@@ -77,6 +79,8 @@ For each selected module, connect frontend -> server validation -> persisted dat
 The generator supplies foundations, not selected business modules or template integration. Keep `businessImplementation` and `templateIntegration` pending until their actual checks pass. Remove fake handlers from connected features; disclose missing payment, shipping, identity, email, and storage configuration.
 
 ## 5. Verify and deliver
+
+When admin is enabled, complete the [authenticated admin acceptance gate](references/verification.md#authenticated-admin-acceptance-gate) before delivery. Opening the login screen is insufficient: enter the signed-in workbench, wait for real data on each implemented management page, exercise key saves and refresh persistence, and verify server authorization. Record unexecuted checks explicitly; do not report the backend as working from build or login-entry checks alone.
 
 Read [Verification](references/verification.md), applying shared checks plus only selected module/type checks. Exercise key actions in isolated local data or sandboxes and verify visible feedback, server results, persistence, authorization, failure cases, and relevant concurrency. Build/typechecks/screenshots alone do not prove working behavior. Inspect actual desktop/mobile pages and text/background contrast after design migration.
 

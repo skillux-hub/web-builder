@@ -1,6 +1,6 @@
 # Business requirements and scope
 
-Collect brand, business, audience, market, website language/multilingual requirements, and the primary customer task. Reuse existing answers and distinguish user choices from defaults. Choose technical architecture without asking the client to select a database/framework.
+Collect brand, business, audience, target market, pricing currency, website language/multilingual requirements, and the primary customer task. Ask for the target market and pricing currency once during initial intake, then reuse those answers throughout requirements gathering; do not ask for them again in payment or shipping follow-ups. Reuse existing answers and distinguish user choices from defaults. Choose technical architecture without asking the client to select a database/framework.
 
 Select a [website type](website-types.md), then relevant [functional modules](modules.md). A clothing store uses commerce with size/color SKUs; a clothing brand showcase can use business/content/inquiries without cart or payments. Other industries follow the actual workflow.
 
@@ -12,7 +12,7 @@ Read [Payments](modules/payments.md) only for ecommerce or a noncommerce payment
 
 ## Shipping service selection
 
-Read [Shipping](modules/shipping.md#shipping-service-selection) only when fulfillment is needed. Establish actual origin/destination; conversation language alone does not establish a route. Reuse existing route/provider choices. The module owns route defaults, labels, tracking, and manual operations.
+Read [Shipping](modules/shipping.md#shipping-service-selection) only when fulfillment is needed. Default the delivery destination/coverage to the target market already collected; do not ask again which market/country the store serves. Establish the warehouse/origin when it is not already known, and ask about extra destination markets only when the user has indicated cross-border or broader coverage. Conversation language alone does not establish a route. Reuse existing route/provider choices. The module owns route defaults, labels, tracking, and manual operations. The pricing currency is independent of shipping destinations and should not be asked again as part of shipping intake.
 
 Use [Country-and-route shipping SDK/API recommendations](shipping-providers.md) to present two or three suitable candidates from the user's/merchant's country and actual warehouse routes. A home country does not determine ship-from coverage; existing selected providers and carrier contracts take precedence. Reuse known countries and qualify the required product/account before choosing a route.
 
