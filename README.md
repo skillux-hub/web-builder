@@ -8,7 +8,7 @@ Use it to create template-based websites or continue projects built with this sk
 
 ## How it works
 
-**Business requirements → Website type → Functional modules → Frontend/admin templates → Implementation → Verification and delivery**
+**Skillux login → Business requirements → Website type → Functional modules → Frontend/admin templates → Implementation → Verification and delivery**
 
 - Compose modules around real workflows, including hybrid sites, without adding commerce or membership to every project.
 - Generate admin features only when needed. Admin-free projects omit management pages/APIs, administrator models, and administrator credentials.
@@ -108,9 +108,10 @@ Save a brief outside the repository, for example as `../brief.json`:
 }
 ```
 
-From the repository root, preview the composition and generate into an empty directory outside the repository:
+From the repository root, pass the login gate, preview the composition, and generate into an empty directory outside the repository. When using selected templates, their access checks must pass before generation:
 
 ```bash
+python scripts/skillux.py login
 python scripts/composition.py --brief ../brief.json
 python scripts/create_project.py ../example-site --brief ../brief.json
 ```
@@ -130,12 +131,12 @@ The generator refuses to overwrite nonempty directories and does not automatical
 
 ## Templates and entitlement
 
-Catalog discovery is anonymous. Downloading selected templates requires Skillux login and valid entitlement:
+Web Builder verifies the Skillux session before starting. Missing or expired login opens official browser authorization and waits for approval. Once a template is selected, confirmed missing entitlement opens its detail page so the user can buy the template or an applicable membership/pass. The workflow continues only after server-side access is granted. The underlying public catalog endpoint remains anonymous:
 
 ```bash
+python scripts/skillux.py login
 python scripts/skillux.py catalog --role frontend --industry services
 python scripts/skillux.py catalog --role admin
-npx skillux login
 python scripts/skillux.py check <template-slug>
 python scripts/skillux.py fetch <template-slug> --role frontend --project ../example-site
 ```

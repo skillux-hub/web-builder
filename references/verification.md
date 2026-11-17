@@ -2,6 +2,9 @@
 
 ## Skill and download tools
 
+- Verify the startup gate using fake services: an existing valid/empty-library session skips authorization; missing/demo/expired credentials trigger the official login flow and require a server recheck; denial/cancellation/offline responses cannot start catalog selection or later work. Do not open real authorization windows for automated tests.
+- Verify selected-target gating: confirmed PURCHASE_REQUIRED opens the real detail page once, preserves the target, and waits for server-granted access; successful checkout text alone is insufficient. Cover delayed grants, timeout, browser-opening failure, session renewal and a disabled admin target. Unknown 403, quota exhaustion, missing targets and network failures must not open purchase prompts or fabricate success. Use mocks/local fixtures; do not buy templates or memberships in tests.
+
 - Run `python -m unittest discover -s "<skill>/tests"`. Fake services cover catalog discovery, expired login, missing entitlement, ZIP/JSON download, versions/continuation records, dangerous paths, and unchanged state on failure.
 - Copy the whole skill to another location and create a project there to establish independence from the original template directories or absolute workspace paths.
 - Public discovery returns only LIVE templates from unfrozen authors, without pack keys, complete `previewJson`, tokens, or instruction bodies. Missing previews are unavailable, not invented links.

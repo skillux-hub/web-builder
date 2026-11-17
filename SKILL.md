@@ -9,6 +9,8 @@ Turn a business brief into a working local website with selected Skillux designs
 
 ## 1. Establish or resume scope
 
+For an actual website-building run, complete the [Skillux startup login gate](references/skillux.md#startup-login-gate) before requirements intake, template recommendations, generation or implementation. Run `python "<skill>/scripts/skillux.py" login`: it verifies the current session, opens official browser authorization if needed, waits for approval and rechecks the server. Do not merely tell the user to log in or continue while approval is pending. Reuse a verified session without asking for authorization again. Network/unknown-access failures remain blockers, not proof that login or purchase is required.
+
 Check the existing app and `.web-builder/project.json` first. Reuse choices, downloaded versions, and check results; do not reinitialize or overwrite work. Follow [Business requirements](references/business.md) for the brief and defaults. Ask only questions whose missing answers change the current work.
 
 Classify by primary customer workflow using [Website types](references/website-types.md):
@@ -50,7 +52,7 @@ Use [Executable composition](references/composition.md) and `scripts/composition
 
 Read [Skillux discovery and downloads](references/skillux.md). Recommend 3–5 suitable frontend packs with real covers/previews, style/fit, and purchase status. A cover is product artwork; disclose missing previews. Offer another selection when requested. The user chooses appearance unless they authorize agent selection.
 
-After frontend selection, recommend an industry-neutral admin design if admin is needed and explain selected management modules. If the requested dashboard already is the management interface, avoid selecting a duplicate workbench for the same purpose. Check every selected slug with `check`; `owned` lists licenses, not a catalog pass. Offer acquisition links/alternatives only after missing entitlement is established; never purchase automatically.
+After frontend selection, recommend an industry-neutral admin design if admin is needed and explain selected management modules. If the requested dashboard already is the management interface, avoid selecting a duplicate workbench for the same purpose. Check every selected slug with `check`; `owned` lists licenses, not a catalog pass. Follow the [selected-template entitlement gate](references/skillux.md#selected-template-entitlement-gate): when the server confirms purchase is required, proactively open the real detail page, explain buying the template or an applicable membership, and wait until a new server check grants access. Do not advance to generation/download/implementation for that selection while it remains denied. The user completes any purchase; do not buy automatically or assume every membership covers every template.
 
 ```bash
 python "<skill>/scripts/skillux.py" catalog --role frontend --industry fashion

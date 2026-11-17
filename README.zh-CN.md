@@ -8,7 +8,7 @@
 
 ## 工作方式
 
-**业务需求 → 网站类型 → 功能模块 → 前台/后台模板 → 实现与集成 → 验证与交付**
+**Skillux 登录 → 业务需求 → 网站类型 → 功能模块 → 前台/后台模板 → 实现与集成 → 验证与交付**
 
 - 按实际业务流程选择模块，支持混合类型，不给所有网站默认加入商城或会员。
 - 按需生成后台；不需要后台时，跳过管理页面、管理接口、管理员表和管理员凭据。
@@ -107,9 +107,10 @@ cd web-builder
 }
 ```
 
-在仓库根目录预览组合，再生成到仓库外的空目录：
+在仓库根目录先通过登录检查，预览组合，再生成到仓库外的空目录。使用选定模板时，需先确认对应下载权限通过：
 
 ```bash
+python scripts/skillux.py login
 python scripts/composition.py --brief ../brief.json
 python scripts/create_project.py ../example-site --brief ../brief.json
 ```
@@ -129,12 +130,12 @@ npm run dev
 
 ## 模板选型与授权
 
-模板目录可匿名查询；下载选定模板前需要 Skillux 登录和有效授权：
+Web Builder 开始前先校验 Skillux 登录；未登录或登录失效时主动打开官方授权页，等待授权并通过服务端复核后再继续。选定模板若被确认没有权限，会打开详情页提示购买模板或适用会员，权限复核通过后再进入下一步。底层公开模板目录 API 仍支持匿名查询：
 
 ```bash
+python scripts/skillux.py login
 python scripts/skillux.py catalog --role frontend --industry services
 python scripts/skillux.py catalog --role admin
-npx skillux login
 python scripts/skillux.py check <template-slug>
 python scripts/skillux.py fetch <template-slug> --role frontend --project ../example-site
 ```

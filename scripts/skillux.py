@@ -8,11 +8,15 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import stat
+import subprocess
+import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
+import webbrowser
 
 MAX_TOTAL = 100 * 1024 * 1024
 MAX_FILE = 40 * 1024 * 1024
@@ -20,6 +24,14 @@ MAX_ENTRIES = 500
 
 
 class SkilluxError(Exception):
+    pass
+
+
+class AuthenticationRequired(SkilluxError):
+    pass
+
+
+class PurchaseRequired(SkilluxError):
     pass
 
 
@@ -48,9 +60,9 @@ def credentials():
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        raise SkilluxError("Not logged in. Run: npx skillux login") from None
+        raise AuthenticationRequired("Not logged in. Run: npx skillux login") from None
     if not isinstance(data, dict) or not isinstance(data.get("token"), str) or not data["token"].strip() or data.get("mode") == "demo" or data["token"] == "demo-local-token":
-        raise SkilluxError("Not logged in. Run: npx skillux login")
+        raise AuthenticationRequired("Not logged in. Run: npx skillux login")
     return data["token"]
 
 
@@ -81,9 +93,15 @@ def request(url, token=None, _redirects=0):
                 raise SkilluxError("Refusing insecure download redirect") from None
             return request(next_url, token if origin(next_url) == origin(url) else None, _redirects + 1)
         if error.code == 401:
-            raise SkilluxError("Session expired. Run: npx skillux login") from None
+            raise AuthenticationRequired("Session expired. Run: npx skillux login") from None
         if error.code == 403:
-            raise SkilluxError("No download entitlement. Acquire this template on Skillux or choose an owned template") from None
+            try:
+                denial = json.loads(error.read(8192))
+            except (ValueError, TypeError, AttributeError, OSError):
+                denial = {}
+            if isinstance(denial, dict) and denial.get("code") == "PURCHASE_REQUIRED":
+                raise PurchaseRequired("No download entitlement. Purchase the selected template or a membership covering it") from None
+            raise SkilluxError("Access denied; verify account access and selected template entitlement") from None
         if error.code == 404:
             raise SkilluxError("Not found: check template access, or deploy the Skillux template catalog endpoint") from None
         if error.code == 429:
@@ -98,6 +116,76 @@ def parse_json(payload):
         return json.loads(payload)
     except (ValueError, UnicodeError):
         raise SkilluxError("Invalid JSON response") from None
+
+
+def auth_status():
+    """Verify credentials with the server without disclosing them or interpreting ownership."""
+    try:
+        token = credentials()
+        payload, _ = request(api_base() + "/me/skills", token)
+    except AuthenticationRequired:
+        return {"authenticated": False, "state": "login_required"}
+    result = parse_json(payload)
+    items = result if isinstance(result, list) else result.get("skills", result.get("items")) if isinstance(result, dict) else None
+    if not isinstance(items, list):
+        raise SkilluxError("Skillux did not return a valid authenticated library response")
+    return {"authenticated": True, "state": "authenticated"}
+
+
+def ensure_login():
+    status = auth_status()
+    if status["authenticated"]:
+        return status
+    npx = shutil.which("npx")
+    if not npx:
+        raise SkilluxError("Node.js/npx is required to open official authorization. Install Node.js, then rerun login")
+    print("Opening official Skillux authorization. Complete approval in the browser; waiting for login...", file=sys.stderr, flush=True)
+    # The official CLI opens its device approval URL and waits for authorization.
+    # Keep its public approval instructions visible; credentials are written by the CLI.
+    completed = subprocess.run([npx, "--yes", "skillux", "login"], stdout=sys.stderr, stderr=sys.stderr)
+    if completed.returncode:
+        raise SkilluxError("Skillux authorization was not completed; no next step was started")
+    status = auth_status()
+    if not status["authenticated"]:
+        raise AuthenticationRequired("Browser login did not establish a verified session; complete authorization before continuing")
+    return status
+
+
+def template_detail_url(slug):
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,127}", slug):
+        raise SkilluxError("Invalid template slug")
+    return urllib.parse.urljoin(api_base() + "/", "/skills/" + urllib.parse.quote(slug, safe=""))
+
+
+def wait_for_access(slug, timeout=900):
+    """Open a confirmed purchase-required detail page once; continue only on server approval."""
+    if not 0 < timeout <= 3600:
+        raise SkilluxError("Access wait timeout must be between 1 and 3600 seconds")
+    detail_url = template_detail_url(slug)
+    deadline = time.monotonic() + timeout
+    opened, renewed = False, False
+    while True:
+        try:
+            return check_access(slug)
+        except AuthenticationRequired:
+            if renewed:
+                raise
+            ensure_login()
+            renewed = True
+        except PurchaseRequired:
+            if not opened:
+                print(f"Purchase required for {slug}. Opening {detail_url}\nBuy the selected template or a membership that covers it, then return here. Waiting for server-confirmed access; this tool does not purchase anything.", file=sys.stderr, flush=True)
+                try:
+                    browser_opened = webbrowser.open(detail_url, new=1)
+                except (webbrowser.Error, OSError):
+                    browser_opened = False
+                if not browser_opened:
+                    raise SkilluxError(f"Could not open template details. Open {detail_url} in your browser and rerun check after purchase")
+                opened = True
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise SkilluxError(f"Access is still unconfirmed for {slug}. Choices were preserved; complete authorization/purchase and rerun check. Details: {detail_url}")
+        time.sleep(min(10, remaining))
 
 
 def safe_relative(name):
@@ -181,9 +269,11 @@ def save_json(path, data):
             os.unlink(temp)
 
 
-def fetch_pack(slug, role, project):
+def fetch_preflight(slug, role, project):
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,127}", slug):
         raise SkilluxError("Invalid template slug")
+    if role not in ("frontend", "admin"):
+        raise SkilluxError("Invalid template role")
     project = Path(project).resolve()
     state_path = project / ".web-builder" / "project.json"
     if not state_path.is_file():
@@ -201,6 +291,11 @@ def fetch_pack(slug, role, project):
         raise SkilluxError("Template destination escapes project workspace")
     if destination.exists():
         raise SkilluxError("Template cache already exists; preserving it. Read the recorded choice or choose a new slug")
+    return project, state_path, state, parent, destination
+
+
+def fetch_pack(slug, role, project):
+    project, state_path, state, parent, destination = fetch_preflight(slug, role, project)
     token = credentials()
     base = api_base()
     payload, headers = request(f"{base}/me/skills/{slug}/download", token)
@@ -271,15 +366,31 @@ def main():
     catalog.add_argument("--page", type=int, default=1)
     catalog.add_argument("--page-size", type=int, default=5)
     sub.add_parser("owned")
-    check = sub.add_parser("check", help="Check effective download access without downloading")
+    sub.add_parser("status", help="Verify the current Skillux session with the server")
+    sub.add_parser("login", help="Verify login, opening official browser authorization when needed")
+    check = sub.add_parser("check", help="Verify access; open purchase-required details and wait when needed")
     check.add_argument("slug")
+    check.add_argument("--timeout", type=int, default=900, help="Maximum access wait in seconds (1-3600)")
     fetch = sub.add_parser("fetch")
     fetch.add_argument("slug")
     fetch.add_argument("--role", required=True, choices=("frontend", "admin"))
     fetch.add_argument("--project", required=True)
+    fetch.add_argument("--timeout", type=int, default=900, help="Maximum access wait in seconds (1-3600)")
     args = parser.parse_args()
     try:
         base = api_base()
+        if args.command == "status":
+            result = auth_status()
+        elif args.command == "login":
+            result = ensure_login()
+        else:
+            if args.command == "fetch":
+                fetch_preflight(args.slug, args.role, args.project)
+            if args.command in ("check", "fetch"):
+                template_detail_url(args.slug)
+                if not 0 < args.timeout <= 3600:
+                    raise SkilluxError("Access wait timeout must be between 1 and 3600 seconds")
+            ensure_login()
         if args.command == "catalog":
             query = {"page": args.page, "pageSize": args.page_size}
             query.update({key: getattr(args, key) for key in ("role", "industry", "q") if getattr(args, key)})
@@ -293,12 +404,22 @@ def main():
         elif args.command == "owned":
             result = parse_json(request(base + "/me/skills", credentials())[0])
         elif args.command == "check":
-            result = check_access(args.slug)
-        else:
-            result = fetch_pack(args.slug, args.role, args.project)
+            result = wait_for_access(args.slug, args.timeout)
+        elif args.command == "fetch":
+            wait_for_access(args.slug, args.timeout)
+            try:
+                result = fetch_pack(args.slug, args.role, args.project)
+            except (AuthenticationRequired, PurchaseRequired):
+                # Permission can change between preflight and download. Retry once,
+                # only after the same gates pass; never retry ambiguous paid/network work.
+                ensure_login()
+                wait_for_access(args.slug, args.timeout)
+                result = fetch_pack(args.slug, args.role, args.project)
         print(json.dumps(result, ensure_ascii=False, indent=2))
     except (SkilluxError, OSError, ValueError) as error:
         parser.exit(1, str(error) + "\n")
+    except KeyboardInterrupt:
+        parser.exit(130, "Authorization/access wait cancelled; no next step was started.\n")
 
 
 if __name__ == "__main__":
