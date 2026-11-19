@@ -4,6 +4,8 @@
 
 A business website-building skill for AI coding agents. Define the scope through **website types × functional modules**, choose Skillux design templates, generate an application foundation, connect business workflows, and verify the result.
 
+Web Builder is listed free on Skillux: https://skillux.dev/skills/web-builder — install steps, files, and the free price are on the product page. Overview: https://skillux.dev/web-builder
+
 Use it to create template-based websites or continue projects built with this skill. Start with [SKILL.md](SKILL.md); executable presets and dependencies live in [config/catalog.json](config/catalog.json).
 
 ## How it works
