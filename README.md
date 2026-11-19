@@ -178,6 +178,11 @@ web-builder/
 └── tests/                Composition and local HTTP checks
 ```
 
+## More
+
+- Featured on Product Hunt: https://www.producthunt.com/products/skillux
+- More AI design skills for Claude Code, Cursor & Codex: https://skillux.dev
+
 ## License
 
 This repository is licensed under the [MIT License](LICENSE). Separately acquired templates, images, fonts, and third-party components retain their own license terms; the repository license does not replace them.
